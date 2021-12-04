@@ -48,13 +48,13 @@ The project encompasses a Discord Bot which currently supports the following fea
 1. Python Pandas    
 
 ## Resources to Learn
-1. [Kaggle Courses] (https://www.kaggle.com/) 
+1. [Kaggle Courses](https://www.kaggle.com/) 
     1. Python
     1. Pandas
 
-1. [Discord Bot Tutorial] (https://realpython.com/how-to-make-a-discord-bot-python/)
+1. [Discord Bot Tutorial](https://realpython.com/how-to-make-a-discord-bot-python/)
 
-1. [Software Engineering @ CS2113/T] (https://nus-cs2113-ay2122s1.github.io/website/) 
+1. [Software Engineering @ CS2113/T](https://nus-cs2113-ay2122s1.github.io/website/) 
     1. Good place to learn version control
     1. Learn about Forking Workflow
 
