@@ -1,3 +1,9 @@
+"""
+Handles Excel Sheet logic.
+If you are not me, you should not temper with this.
+Always try to use your local directory when you are developing. In which case, look at the local_disk functions.
+"""
+
 from datetime import datetime
 import pandas as pd
 from pandas.tseries.offsets import BDay
@@ -218,6 +224,9 @@ def verify_is_okay_to_share_by_discord_name(discord_name, df):
     return True if _df["ArtPostOk"].values[0] == "I agree" else False
 
 def get_fuzzily_discord_handle(discord_name, df, get_uid = False):
+    """
+        Handles parsing of user-input Discord names and returns the name part
+    """
     success_flag = False
     for index, row in df.iterrows():
         # print(row)
@@ -282,6 +291,10 @@ def set_up_palette_particulars_csv():
     return df
 
 import sys
+
+"""
+You can run code here to test the above functions.
+"""
 if __name__ == "__main__":
     # # for line in sys.stdin:
     # #     if 'q' == line.rstrip():

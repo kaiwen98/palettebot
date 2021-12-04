@@ -54,6 +54,9 @@ The project encompasses a Discord Bot which currently supports the following fea
 
 1. [Discord Bot Tutorial](https://realpython.com/how-to-make-a-discord-bot-python/)
 
+1. [Discord Bot Documentation](https://discordpy.readthedocs.io/en/stable/api.html)
+    * You don't need to know everything. Just look up what you happen to need to know.
+
 1. [Software Engineering @ CS2113/T](https://nus-cs2113-ay2122s1.github.io/website/) 
     1. Good place to learn version control
     1. Learn about Forking Workflow

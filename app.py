@@ -79,9 +79,6 @@ counter: int
 df = None
 
 export_file: str
-# The code should look back to a large number of messages
-# Up to a specific date
-# Then downloads all images with the corresponding tag name 
 
 # bot = commands.Bot(command_prefix='> ', intents=intents)
 
@@ -114,6 +111,13 @@ async def _get_all_members(channel_input, ctx):
     )
 
 async def get_photos(channel_input, dd_begin, mm_begin, dd_end, mm_end, ctx): 
+    """
+        The code should look back to a large number of messages within a particular date range,
+        Then downloads all images from artists who have the right permissions.
+
+        TODO: Relocate this code to controller/artwork_extract.py 
+    """
+
     global export_file
     channel = None
     for guild in bot.guilds:
@@ -203,6 +207,11 @@ async def get_photos(channel_input, dd_begin, mm_begin, dd_end, mm_end, ctx):
         
 
 async def update_inktober(user, state, date):
+    """
+        The code should update state to excel sheet.
+
+        TODO: Relocate this code to controller/inktober.py 
+    """
     _df_inktober = set_up_inktober()
     for guild in bot.guilds:
         print(guild)
@@ -216,7 +225,6 @@ async def update_inktober(user, state, date):
 
     for index, row in _df_inktober.iterrows():
         # iterates over the sheet
-        # print(row[MEMBER_INFO_COL_DISCORD])
         if get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], _df_discord_members, get_uid=True) is None:
             continue
         
@@ -224,10 +232,14 @@ async def update_inktober(user, state, date):
         state_ls = list(row[INKTOBER_STATE])
         state_ls[date] = str(state)
         _df_inktober.at[index, INKTOBER_STATE] = "".join(state_ls)
-        # print("HEREEEEEEEEEEEE", _df_inktober.at[index, INKTOBER_STATE])
     update_inktober_state_to_gsheets(_df_inktober)
 
 async def handle_check_birthdates_and_give_shoutout():
+    """
+        The code should handle birthday logic.
+
+        TODO: Relocate this code to controller/birthday.py 
+    """
     flag = False
     sent_bday_pic = False
     sent_week_pic = False
@@ -298,6 +310,10 @@ async def handle_check_birthdates_and_give_shoutout():
     update_birthday_state_to_gsheets(_df)
         
 async def birthday_task():
+    """
+        Entry point to birthday logic. 
+        TODO: Relocate this code to controller/birthday.py 
+    """
     for guild in bot.guilds:
         print(guild)
         if guild.name == GUILD:
@@ -321,8 +337,9 @@ async def birthday_task():
                 counter = counter - 1
                 await asyncio.sleep(1)
 
-
-
+"""
+    Command Handlers    
+"""
 
 @bot.command(
     name='bd_setdelay', 
@@ -384,7 +401,6 @@ async def get_month_birthdays(ctx):
 
         except Exception as e:
             continue
-
 
     await ctx.send(
         "```" + "".join(output) + "```"
@@ -518,27 +534,26 @@ async def on_ready():
     print(f'{bot.user} has connected to Discord!')
     if IS_HEROKU: 
         bot.loop.create_task(birthday_task())
-    # if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
-    #     bot.loop.create_task(ink.inktober_task())
-    # else:
-    #     bot.loop.create_task(waf.waifuwars_task())
+    if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
+        bot.loop.create_task(ink.inktober_task())
+    elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
+        bot.loop.create_task(waf.waifuwars_task())
 
 @bot.event
 async def on_message(message):
     if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
         await ink.on_message_inktober(message, approve_queue)
-    else:
+    elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
         await waf.on_message_waifuwars(message, approve_queue)
 
 @bot.event
 async def on_raw_reaction_add(payload):
     if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
         await ink.on_raw_reaction_add_inktober(payload, approve_queue)
-    else:
+    elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
         await waf.on_raw_reaction_add_waifuwars(payload, approve_queue)
 
 if __name__ == "__main__":
-    print("k")
     bot.run(TOKEN)
 
 

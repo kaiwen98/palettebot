@@ -1,3 +1,9 @@
+"""
+Handles Upload of contents to Google Drive.
+If you are not me, you should not temper with this.
+Always try to use your local directory when you are developing. In which case, look at the local_disk functions.
+"""
+
 from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 import os
