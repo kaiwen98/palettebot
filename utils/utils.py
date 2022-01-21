@@ -29,7 +29,6 @@ def get_today_date(is_heroku = False):
     return date.date().day
 
 def get_num_days_away(member_date):
-    
     dummy_member_date = datetime(
         day=member_date.day,
         month=member_date.month,

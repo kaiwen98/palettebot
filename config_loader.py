@@ -30,7 +30,7 @@ curr_day = 3
 def load_config():
     print("hi")
     global TOKEN, GUILD, INKTOBER_APPROVE_CHANNEL, INKTOBER_RECEIVE_CHANNEL
-    global INKTOBER_REPORT_CHANNEL, IS_HEROKU, DELAY, WAIFUWARS_APPROVE_CHANNEL, WAIFUWARS_RECEIVE_CHANNEL, WAIFUWARS_REPORT_CHANNEL
+    global BIRTHDAY_REPORT_CHANNEL, INKTOBER_REPORT_CHANNEL, IS_HEROKU, DELAY, WAIFUWARS_APPROVE_CHANNEL, WAIFUWARS_RECEIVE_CHANNEL, WAIFUWARS_REPORT_CHANNEL
     global bot
     load_dotenv()
     IS_HEROKU = "IS_HEROKU" in os.environ.keys()
@@ -45,6 +45,8 @@ def load_config():
     WAIFUWARS_REPORT_CHANNEL = "general" if IS_HEROKU else "exco-chat"
     WAIFUWARS_APPROVE_CHANNEL = "art-gallery🥰" if IS_HEROKU else "exco-chat"
 
+    BIRTHDAY_REPORT_CHANNEL = "general" if IS_HEROKU else "bot-spam"
+
     DELAY = 300 if IS_HEROKU else 10
     intents = discord.Intents.default()
     intents.members = True
@@ -52,4 +54,5 @@ def load_config():
     intents.reactions = True
     bot = commands.Bot(command_prefix='> ', intents=intents)
     print("done")
+
 load_config()

@@ -10,6 +10,7 @@ from config_loader import (
     ART_FIGHT_STATE,
     GUILD, 
     DELAY,
+    BIRTHDAY_REPORT_CHANNEL,
     INKTOBER_APPROVE_CHANNEL, 
     INKTOBER_RECEIVE_CHANNEL, 
     INKTOBER_REPORT_CHANNEL, 
@@ -80,8 +81,6 @@ df = None
 
 export_file: str
 
-# bot = commands.Bot(command_prefix='> ', intents=intents)
-
 async def _get_all_members(channel_input, ctx):
     channel = None
     for guild in bot.guilds:
@@ -110,7 +109,7 @@ async def _get_all_members(channel_input, ctx):
         "".join(mem_names)
     )
 
-async def get_photos(channel_input, dd_begin, mm_begin, dd_end, mm_end, ctx): 
+async def get_photos(channel_input, dd_begin, mm_begin, dd_end, mm_end, year, ctx): 
     """
         The code should look back to a large number of messages within a particular date range,
         Then downloads all images from artists who have the right permissions.
@@ -154,11 +153,11 @@ async def get_photos(channel_input, dd_begin, mm_begin, dd_end, mm_end, ctx):
         if str(message.author) not in repeat_dict.keys():
             repeat_dict[str(message.author)] = 0
         # Startline
-        if (message.created_at < datetime(2021, mm_begin, dd_begin, 0, 0, 0) - timedelta(hours = 8)): 
+        if (message.created_at < datetime(year, mm_begin, dd_begin, 0, 0, 0) - timedelta(hours = 8)): 
             print("Done!")
             break
         # Deadline
-        elif (message.created_at > datetime(2021, mm_end, dd_end, 0, 0, 0) - timedelta(hours = 8)): 
+        elif (message.created_at > datetime(year, mm_end, dd_end, 0, 0, 0) - timedelta(hours = 8)): 
             continue
 
         if len(message.attachments) > 0:
@@ -255,7 +254,7 @@ async def handle_check_birthdates_and_give_shoutout():
     print(_df_discord_members)
 
     for g_channel in guild.channels:
-        if "general" in g_channel.name:
+        if BIRTHDAY_REPORT_CHANNEL in g_channel.name:
             channel = guild.get_channel(g_channel.id)
             break
 
@@ -459,16 +458,22 @@ async def reset_shoutout_counter(ctx):
 
 @bot.command(
     name='export', 
-    help='Provide \"export DD MM DD MM\", with start date first and end date last.'
+    help='Provide \"export DD MM DD MM YYYY\", with start date first and end date last. The year is optional, so no entry means current year.'
     )
-async def export(ctx, channel: str, dd_begin: int, mm_begin: int, dd_end: int, mm_end: int):
+async def export(ctx, channel: str, dd_begin: int, mm_begin: int, dd_end: int, mm_end: int, year=None):
     global df
+
+    print(",", year, ",")
+
+    if year is None:
+        year = datetime.today().year
+
     df = set_up_palette_particulars_csv()
     await ctx.send(
         "```Aye aye capt'n! Checking for channel: %s. Please wait...```" % (channel)
     )
     try:
-        await get_photos(channel, dd_begin, mm_begin, dd_end, mm_end, ctx)
+        await get_photos(channel, dd_begin, mm_begin, dd_end, mm_end, year, ctx)
     except Exception as e:
         await ctx.send(
             "```Error occured! Contact the administrator. Message: %s```" % (str(e))
@@ -532,26 +537,25 @@ async def on_ready():
         if guild.name == GUILD:
             break
     print(f'{bot.user} has connected to Discord!')
-    if IS_HEROKU: 
-        bot.loop.create_task(birthday_task())
-    if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
-        bot.loop.create_task(ink.inktober_task())
-    elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
-        bot.loop.create_task(waf.waifuwars_task())
+    bot.loop.create_task(birthday_task())
+    # if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
+    #     bot.loop.create_task(ink.inktober_task())
+    # elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
+    #     bot.loop.create_task(waf.waifuwars_task())
 
-@bot.event
-async def on_message(message):
-    if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
-        await ink.on_message_inktober(message, approve_queue)
-    elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
-        await waf.on_message_waifuwars(message, approve_queue)
+# @bot.event
+# async def on_message(message):
+#     if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
+#         await ink.on_message_inktober(message, approve_queue)
+#     elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
+#         await waf.on_message_waifuwars(message, approve_queue)
 
-@bot.event
-async def on_raw_reaction_add(payload):
-    if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
-        await ink.on_raw_reaction_add_inktober(payload, approve_queue)
-    elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
-        await waf.on_raw_reaction_add_waifuwars(payload, approve_queue)
+# @bot.event
+# async def on_raw_reaction_add(payload):
+#     if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
+#         await ink.on_raw_reaction_add_inktober(payload, approve_queue)
+#     elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
+#         await waf.on_raw_reaction_add_waifuwars(payload, approve_queue)
 
 if __name__ == "__main__":
     bot.run(TOKEN)
