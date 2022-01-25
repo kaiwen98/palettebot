@@ -57,9 +57,9 @@ def get_num_days_away(member_date):
         num_days_away = 365 + num_days_away
     return num_days_away
 
-def get_channel(bot, GUILD, channel_name):
+def get_channel(bot, guild_name, channel_name):
     for guild in bot.guilds:
-        if guild.name == GUILD:
+        if guild.name == guild_name:
             break
     for g_channel in guild.channels:
         if channel_name in g_channel.name:
@@ -67,6 +67,11 @@ def get_channel(bot, GUILD, channel_name):
             return channel
     
     return False
+
+def get_guild(bot, guild_name):
+    for guild in bot.guilds:
+        if guild.name == guild_name:
+            return guild
 
 async def remove_messages(messages_to_delete):
     for message in messages_to_delete:

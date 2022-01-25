@@ -1,6 +1,8 @@
+import code
 import os
 import discord
 from discord.ext import commands
+from discord.utils import get
 import requests
 from datetime import datetime, time, timedelta
 from zipfile import ZipFile
@@ -55,13 +57,17 @@ from controller.get_list_of_artists import get_list_of_artists
 from utils.commons import (
     DIR_OUTPUT, 
     DISCORD_CHANNEL_ART_GALLERY, 
-    DISCORD_MESSAGES_LIMIT
+    DISCORD_MESSAGES_LIMIT,
+    EXTRAVAGANZA_INVITE_LINK,
+    EXTRAVAGANZA_ROLE,
+    MEMBER_ROLE
 )
 from utils.utils import (
     calculate_score, 
     clear_folder, 
     get_channel, 
     get_day,
+    get_guild,
     get_msg_by_jump_url, 
     get_num_days_away, 
     get_rank_emoji, 
@@ -80,6 +86,8 @@ counter: int
 df = None
 
 export_file: str
+
+invite_links = {}
 
 async def _get_all_members(channel_input, ctx):
     channel = None
@@ -479,38 +487,38 @@ async def export(ctx, channel: str, dd_begin: int, mm_begin: int, dd_end: int, m
             "```Error occured! Contact the administrator. Message: %s```" % (str(e))
         )
 
-# @bot.command(
-#     name='ink_addmsgtoapprove', 
-#     help='If there are some approve messages that does not react to reactions, we use this command to add them back manually into the approve list.'
-#     )
-# async def add_msg_to_approve(ctx, link: str):
-#     global approve_queue
+@bot.command(
+    name='ink_addmsgtoapprove', 
+    help='If there are some approve messages that does not react to reactions, we use this command to add them back manually into the approve list.'
+    )
+async def add_msg_to_approve(ctx, link: str):
+    global approve_queue
 
-#     # try:
+    # try:
     
-#     await get_msg_by_jump_url(bot, ctx, INKTOBER_APPROVE_CHANNEL, link.strip())   
-#     msg_to_approve = call_stack.pop() 
-#     msg_id = msg_to_approve.id
-#     if msg_id in approve_queue.keys():
-#         await ctx.send(
-#             "```Message is already in queue...```"
-#         )
-#         return
+    await get_msg_by_jump_url(bot, ctx, INKTOBER_APPROVE_CHANNEL, link.strip())   
+    msg_to_approve = call_stack.pop() 
+    msg_id = msg_to_approve.id
+    if msg_id in approve_queue.keys():
+        await ctx.send(
+            "```Message is already in queue...```"
+        )
+        return
 
-#     link_to_msg_artwork = msg_to_approve.content.strip().split(" ")[-1]
+    link_to_msg_artwork = msg_to_approve.content.strip().split(" ")[-1]
     
-#     await get_msg_by_jump_url(bot, ctx, INKTOBER_RECEIVE_CHANNEL, link_to_msg_artwork)
-#     msg_artwork = call_stack.pop() 
-#     day = get_day(msg_artwork)
+    await get_msg_by_jump_url(bot, ctx, INKTOBER_RECEIVE_CHANNEL, link_to_msg_artwork)
+    msg_artwork = call_stack.pop() 
+    day = get_day(msg_artwork)
 
-#     approve_queue[msg_id] = (int(day), msg_artwork)
-#     await ctx.send(
-#         "```Added %d! Approve Queue contents is now: %s```" % (msg_id, ",".join([str(i) for i in approve_queue.keys()]))
-#     )
-#     # except Exception as e:
-#     #     await ctx.send(
-#     #         "```Error occured! Contact the administrator. Message: %s```" % (str(e))
-#     #     )
+    approve_queue[msg_id] = (int(day), msg_artwork)
+    await ctx.send(
+        "```Added %d! Approve Queue contents is now: %s```" % (msg_id, ",".join([str(i) for i in approve_queue.keys()]))
+    )
+    # except Exception as e:
+    #     await ctx.send(
+    #         "```Error occured! Contact the administrator. Message: %s```" % (str(e))
+    #     )
 
 
 @bot.command(
@@ -536,26 +544,173 @@ async def on_ready():
         print(guild)
         if guild.name == GUILD:
             break
+
+    # Getting all the guilds our bot is in
+    for guild in bot.guilds:
+        # Adding each guild's invites to our dict
+        invite_links[guild.id] = await guild.invites()
+
+    print(guild.roles)
+        
     print(f'{bot.user} has connected to Discord!')
-    bot.loop.create_task(birthday_task())
-    # if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
-    #     bot.loop.create_task(ink.inktober_task())
-    # elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
-    #     bot.loop.create_task(waf.waifuwars_task())
+    if IS_HEROKU:
+        bot.loop.create_task(birthday_task())
+    if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
+        bot.loop.create_task(ink.inktober_task())
+    elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
+        bot.loop.create_task(waf.waifuwars_task())
 
-# @bot.event
-# async def on_message(message):
-#     if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
-#         await ink.on_message_inktober(message, approve_queue)
-#     elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
-#         await waf.on_message_waifuwars(message, approve_queue)
+@bot.event
+async def on_message(message):
+    if message.channel.name == "bot-spam":
+        await bot.process_commands(message)
+        return 
+    if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
+        await ink.on_message_inktober(message, approve_queue)
+    elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
+        await waf.on_message_waifuwars(message, approve_queue)
 
-# @bot.event
-# async def on_raw_reaction_add(payload):
-#     if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
-#         await ink.on_raw_reaction_add_inktober(payload, approve_queue)
-#     elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
-#         await waf.on_raw_reaction_add_waifuwars(payload, approve_queue)
+@bot.event
+async def on_raw_reaction_add(payload):
+    if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
+        await ink.on_raw_reaction_add_inktober(payload, approve_queue)
+    elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
+        await waf.on_raw_reaction_add_waifuwars(payload, approve_queue)
+
+
+
+"""
+    This code is referenced from https://medium.com/@tonite/finding-the-invite-code-a-user-used-to-join-your-discord-server-using-discord-py-5e3734b8f21f
+
+    Applied for Extravaganza 2022; allow participants to join the Discord Server to attend lessons.
+    The special invite code is https://discord.gg/ddekPqAckv.
+"""
+    
+
+@bot.event
+async def on_member_remove(member):
+    
+    # Updates the cache when a user leaves to make sure
+    # everything is up to date
+    
+    invite_links[member.guild.id] = await member.guild.invites()
+
+@bot.event
+async def on_member_join(member):
+
+    # Getting the invites before the user joining
+    # from our cache for this specific guild
+
+    invites_before_join = invite_links[member.guild.id]
+
+    # Getting the invites after the user joining
+    # so we can compare it with the first one, and
+    # see which invite uses number increased
+
+    invites_after_join = await member.guild.invites()
+
+    # Loops for each invite we have for the guild
+    # the user joined.
+
+    for invite in invites_before_join:
+
+        # Now, we're using the function we created just
+        # before to check which invite count is bigger
+        # than it was before the user joined.
+        
+        if invite.uses < find_invite_by_code(invites_after_join, invite.code).uses:
+            
+            # Now that we found which link was used,
+            # we will print a couple things in our console:
+            # the name, invite code used the the person
+            # who created the invite code, or the inviter.
+            
+            print(f"Member {member.name} Joined")
+            print(f"Invite Code: {invite.code}")
+            print(f"Inviter: {invite.inviter}")
+            
+            # We will now update our cache so it's ready
+            # for the next user that joins the guild
+
+            invite_links[member.guild.id] = invites_after_join
+            
+            # We return here since we already found which 
+            # one was used and there is no point in
+            # looping when we already got what we wanted
+            
+            if invite.code == EXTRAVAGANZA_INVITE_LINK:
+                role = get(member.guild.roles, name=EXTRAVAGANZA_ROLE)
+                await member.add_roles(role)
+            else:
+                role = get(member.guild.roles, name=MEMBER_ROLE)
+                await member.add_roles(role)
+            return
+
+@bot.command(
+    name='ex2022_kick_participants', 
+    help='Kick all participants with the role: Extravaganza 2022 Participant'
+)
+async def ex2020_kick_participants(ctx):
+    guild = get_guild(bot, GUILD)
+    for member in guild.members:
+        if member.name != "nuscastestbot":
+            continue
+        # elif member.name == "okai_iwen":
+        #     print(member.roles)
+        #     continue
+        else:
+            print("GOTA")
+            print(member.roles)
+            if member.roles[1].name == EXTRAVAGANZA_ROLE:
+                await guild.kick(member, reason = "Thank you for joining Extravaganza 2022! Hope it has been fun for you :)") 
+
+@bot.command(
+    name='ex2022_set_new_invite', 
+    help='Set a new invite link. If no link is provided, a new one is generated.'
+)
+async def ex2020_set_new_invite(ctx, updated_invite = None):
+    global EXTRAVAGANZA_INVITE_LINK
+    guild = get_guild(bot, GUILD)
+    link = None
+    invites = await guild.invites()
+
+    if updated_invite is None:
+        link = await get_channel(bot, GUILD, "free-chat").create_invite()
+        link = link.code
+
+    else:
+        for i in invites:
+            if i.code == updated_invite:
+                link = i.code
+                break
+            
+
+
+    if link is not None:
+        await ctx.send(
+                "```Your updated invite link is https://discord.gg/%s```" % (link)
+            )
+        
+        if EXTRAVAGANZA_INVITE_LINK is not None:
+
+            tmp = find_invite_by_code(invites, EXTRAVAGANZA_INVITE_LINK)
+            if tmp is not None:
+                await tmp.delete()
+
+        EXTRAVAGANZA_INVITE_LINK = updated_invite
+
+    else:
+        await ctx.send(
+                    "```We cannot find the link. It is invalid.```"
+                )    
+
+
+
+def find_invite_by_code(invite_list, code):
+    for inv in invite_list:
+        if inv.code == code:
+            return inv
+
 
 if __name__ == "__main__":
     bot.run(TOKEN)
