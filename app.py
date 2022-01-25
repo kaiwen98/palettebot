@@ -58,7 +58,6 @@ from utils.commons import (
     DIR_OUTPUT, 
     DISCORD_CHANNEL_ART_GALLERY, 
     DISCORD_MESSAGES_LIMIT,
-    EXTRAVAGANZA_INVITE_LINK,
     EXTRAVAGANZA_ROLE,
     MEMBER_ROLE
 )
@@ -88,6 +87,8 @@ df = None
 export_file: str
 
 invite_links = {}
+
+EXTRAVAGANZA_INVITE_LINK = 'ddekPqAckv'
 
 async def _get_all_members(channel_input, ctx):
     channel = None
@@ -549,6 +550,7 @@ async def on_ready():
     for guild in bot.guilds:
         # Adding each guild's invites to our dict
         invite_links[guild.id] = await guild.invites()
+        print("--begin ", invite_links[guild.id])
 
     print(guild.roles)
         
@@ -597,17 +599,18 @@ async def on_member_remove(member):
 
 @bot.event
 async def on_member_join(member):
-
+    global EXTRAVAGANZA_INVITE_LINK 
     # Getting the invites before the user joining
     # from our cache for this specific guild
 
     invites_before_join = invite_links[member.guild.id]
-
+    print("--before ", invite_links[member.guild.id])
     # Getting the invites after the user joining
     # so we can compare it with the first one, and
     # see which invite uses number increased
 
     invites_after_join = await member.guild.invites()
+    print("--after ", invite_links[member.guild.id])
 
     # Loops for each invite we have for the guild
     # the user joined.
@@ -617,7 +620,9 @@ async def on_member_join(member):
         # Now, we're using the function we created just
         # before to check which invite count is bigger
         # than it was before the user joined.
-        
+        print(invite.uses)
+
+        print(find_invite_by_code(invites_after_join, invite.code).uses)
         if invite.uses < find_invite_by_code(invites_after_join, invite.code).uses:
             
             # Now that we found which link was used,
@@ -638,6 +643,7 @@ async def on_member_join(member):
             # one was used and there is no point in
             # looping when we already got what we wanted
             
+            print(EXTRAVAGANZA_INVITE_LINK)
             if invite.code == EXTRAVAGANZA_INVITE_LINK:
                 role = get(member.guild.roles, name=EXTRAVAGANZA_ROLE)
                 await member.add_roles(role)
@@ -653,29 +659,23 @@ async def on_member_join(member):
 async def ex2020_kick_participants(ctx):
     guild = get_guild(bot, GUILD)
     for member in guild.members:
-        if member.name != "nuscastestbot":
-            continue
-        # elif member.name == "okai_iwen":
-        #     print(member.roles)
-        #     continue
-        else:
-            print("GOTA")
-            print(member.roles)
-            if member.roles[1].name == EXTRAVAGANZA_ROLE:
-                await guild.kick(member, reason = "Thank you for joining Extravaganza 2022! Hope it has been fun for you :)") 
+        if member.roles[1].name == EXTRAVAGANZA_ROLE:
+            await guild.kick(member, reason = "Thank you for joining Extravaganza 2022! Hope it has been fun for you :)") 
 
 @bot.command(
     name='ex2022_set_new_invite', 
     help='Set a new invite link. If no link is provided, a new one is generated.'
 )
 async def ex2020_set_new_invite(ctx, updated_invite = None):
-    global EXTRAVAGANZA_INVITE_LINK
+    global EXTRAVAGANZA_INVITE_LINK 
     guild = get_guild(bot, GUILD)
     link = None
     invites = await guild.invites()
 
+    
+
     if updated_invite is None:
-        link = await get_channel(bot, GUILD, "free-chat").create_invite()
+        link = await get_channel(bot, GUILD, "general").create_invite()
         link = link.code
 
     else:
@@ -697,12 +697,15 @@ async def ex2020_set_new_invite(ctx, updated_invite = None):
             if tmp is not None:
                 await tmp.delete()
 
-        EXTRAVAGANZA_INVITE_LINK = updated_invite
+        EXTRAVAGANZA_INVITE_LINK = link
+        print(EXTRAVAGANZA_INVITE_LINK, " is created")
 
     else:
         await ctx.send(
                     "```We cannot find the link. It is invalid.```"
                 )    
+    
+    invite_links[guild.id] = await guild.invites()
 
 
 
