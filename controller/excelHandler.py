@@ -17,6 +17,8 @@ import csv
 import gspread
 from oauth2client.service_account import ServiceAccountCredentials
 from requests.api import get
+
+from utils.utils import get_file_path
 PATH_MEMBER_INFO = "C:\\Users\\Looi Kai Wen\\OneDrive - National University of Singapore\\Post Welcome Tea Signups.xlsx"
 MEMBER_INFO_COL_DISCORD = "Discord"
 MEMBER_INFO_COL_BDATE = "Birthday (DDMMYYYY)"
@@ -38,6 +40,7 @@ DOCID_PALETTE_PARTICULARS_SURVEY = "1s0srCxt7ohWl9VnrYwkozd_reEhUWjKzUG-Q4vB_1co
 DOCID_BIRTHDAY_TRACKER = "1TJpZvgcr67eVYo2G4hcpN1nSR4kBLuSmomgJMHuGuts"
 DOCID_INKTOBER_TRACKER = "15nz3z8iGWSUqbwJN3xJ0NlqYaSSUt8DiqQHZSAaLlr4"
 
+PATH_TO_CREDENTIALS = "./cred/credentials_excel.json"
 
 qn_to_colnames = {
     "Timestamp" : "Timestamp",
@@ -164,7 +167,10 @@ def update_inktober_state_to_gsheets(df):
 
 def get_spreadsheet_from_drive(docid):
     scope = ['https://spreadsheets.google.com/feeds']
-    credentials = ServiceAccountCredentials.from_json_keyfile_name('./credentials_excel.json', scope)
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(
+      get_file_path("cred", "gsheets"), 
+      scope
+    )
     worksheets = []
     client = gspread.authorize(credentials)
     spreadsheet = client.open_by_key(docid)
@@ -183,7 +189,7 @@ def correct_df_header(df, name_dict = qn_to_colnames):
 
 def get_sheet_df_from_drive(docid, name_dict = qn_to_colnames):
     scope = ['https://spreadsheets.google.com/feeds']
-    credentials = ServiceAccountCredentials.from_json_keyfile_name('./credentials_excel.json', scope)
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(PATH_TO_CREDENTIALS, scope)
     df_list = []
     client = gspread.authorize(credentials)
     spreadsheet = client.open_by_key(docid)

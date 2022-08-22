@@ -8,18 +8,24 @@ from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 import os
 from datetime import datetime
+from utils.commons import DRIVE__PALETTE_REP_TRACKER
+from utils.utils import get_file_path
 
-gauth = GoogleAuth()           
+gauth = GoogleAuth()
+gauth.LoadCredentialsFile(
+  get_file_path("cred", "gdrive")
+)
+
 drive = GoogleDrive(gauth)  
 
 def upload_to_gdrive(upload_file_list: list):
     for upload_file in upload_file_list:
-        gfile = drive.CreateFile({'parents': [{'id': '1KJjLSjJFKaplcT_Asx3Ftd2VCZHtAk00'}]})
+        gfile = drive.CreateFile({'parents': [{'id': DRIVE__PALETTE_REP_TRACKER}]})
         # Read file and set it as the content of this instance.
         gfile.SetContentFile(upload_file)
         gfile.Upload() # Upload the file.
 
-    file_list = drive.ListFile({'q': "'{}' in parents and trashed=false".format('1KJjLSjJFKaplcT_Asx3Ftd2VCZHtAk00')}).GetList()
+    file_list = drive.ListFile({'q': "'{}' in parents and trashed=false".format(DRIVE__PALETTE_REP_TRACKER)}).GetList()
     file_list.sort(key = lambda x: x['createdDate'])
     print(file_list[-1]['createdDate'])
     return file_list[-1]['webContentLink']

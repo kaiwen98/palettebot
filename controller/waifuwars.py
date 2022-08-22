@@ -50,7 +50,7 @@ from controller.excelHandler import (
     update_inktober_state_to_gsheets, 
     verify_is_okay_to_share_by_discord_name
 )
-from controller.get_list_of_artists import get_list_of_artists
+from controller.commons import get_list_of_artists
 from controller.inktober import DICT_DAY_TO_PROMPT
 from utils.commons import (
     APPROVE_SIGN,
@@ -65,7 +65,7 @@ from utils.utils import (
     clear_folder,
     get_attacked_user, 
     get_channel, 
-    get_day,
+    get_day_from_message,
     get_msg_by_jump_url, 
     get_num_days_away, 
     get_rank_emoji, 

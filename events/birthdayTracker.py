@@ -1,0 +1,102 @@
+"""
+Consolidates all commands that is related to the birthdayTracker.
+"""
+from controller.DiscordBot import DiscordBot
+from controller import inktober as ink
+import asyncio
+from controller.excelHandler import (
+  MEMBER_INFO_BIRTHDAY_STATE,
+  MEMBER_INFO_COL_BDATE,
+  MEMBER_INFO_COL_DISCORD,
+  STATE_NO_SHOUTOUTS,
+  get_fuzzily_discord_handle,
+  set_up_member_info,
+  update_birthday_state_to_gsheets
+)
+from config_loader import (
+  INKTOBER_APPROVE_CHANNEL,
+  INKTOBER_RECEIVE_CHANNEL,
+  GUILD
+)
+from utils.utils import (
+  get_msg_by_jump_url,
+  get_day_from_message,
+  get_num_days_away
+)
+
+import datetime
+
+import pandas as pd
+
+import config_loader as cfg
+
+bot = DiscordBot().bot
+
+def register_events():
+  @bot.command(
+    name='bd_setdelay', 
+    help='Change birthday delay in seconds.'
+  )
+  async def change_bd_delay(ctx, delay):
+    guild = DiscordBot().get_guild(GUILD)
+    channel = DiscordBot().get_channel(guild, "bot-spam");
+    cfg.DELAY = int(delay)
+    await channel.send(
+      "```Delay Change Complete!```"
+    )
+
+  @bot.command(
+    name='bd_listmonth', 
+    help='Get all birthdays for the month'
+  )
+  async def get_month_birthdays(ctx):
+    output = []
+    member_info = set_up_member_info()
+    guild = DiscordBot().get_guild(GUILD)
+    channel = DiscordBot().get_channel(guild, "bot-spam")
+    df_discord_members = pd.DataFrame({
+      "Discord": [i.name + "#" + str(i.discriminator) for i in guild.members],
+      "uid" : [i.id for i in guild.members],
+    })
+    for index, row in member_info.iterrows():
+      try:
+
+        if get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members) is None:
+          continue
+
+        if row[MEMBER_INFO_COL_BDATE].date().month == (datetime.datetime.now() + datetime.timedelta(hours = 8)).date().month:
+          output.append("%s | %s | %s\n " % (
+            # Discord name
+            get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members), 
+            # Month and date
+            datetime.datetime.strftime(row[MEMBER_INFO_COL_BDATE], "%m-%d"),
+            # Number of days away
+            get_num_days_away(row[MEMBER_INFO_COL_BDATE].date())
+          ))
+
+      except Exception as e:
+        output = ["Something went wrong"]
+        continue
+
+      await ctx.send(
+        "```" + "".join(output) + "```"
+      )
+
+  @bot.command(
+    name='bd_forgetshoutouts', 
+    help='Forget who the bot has wished birthdays for.'
+  )
+  async def reset_shoutout_counter(ctx):
+    member_info = set_up_member_info()
+
+    guild = DiscordBot().get_guild(GUILD)
+    channel = DiscordBot().get_channel(guild, "bot-spam")
+    
+    # reset all birthday wishing state to none
+    member_info[MEMBER_INFO_BIRTHDAY_STATE] = [STATE_NO_SHOUTOUTS for i in range(member_info.shape[0])]
+    await channel.send(
+      "```The Bot has forgotten when shoutouts were made!```"
+    )
+    update_birthday_state_to_gsheets(member_info)
+
+
