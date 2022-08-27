@@ -1,10 +1,11 @@
 from datetime import datetime
 import os
+from controller.DiscordBot import DiscordBot
 import discord
 import pandas as pd
 import requests
 import asyncio
-from config_loader import GUILD, INKTOBER_APPROVE_CHANNEL, INKTOBER_RECEIVE_CHANNEL, INKTOBER_REPORT_CHANNEL, IS_HEROKU, bot, DELAY
+from config_loader import GUILD, INKTOBER_APPROVE_CHANNEL, INKTOBER_RECEIVE_CHANNEL, INKTOBER_REPORT_CHANNEL, IS_HEROKU, DELAY
 import config_loader as cfg
 from controller.excelHandler import INKTOBER_STATE, MEMBER_INFO_COL_DISCORD, STATE_APPROVED, STATE_UNDER_APPROVAL, get_fuzzily_discord_handle, set_up_inktober, update_inktober_state_to_gsheets
 from utils.commons import APPROVE_SIGN, DIR_OUTPUT, NOT_APPROVE_SIGN
@@ -48,7 +49,8 @@ DICT_WEEK_TO_PROMPT = {
 async def inktober_task():
   counter = 0
   channel_to_send = INKTOBER_REPORT_CHANNEL
-  await get_channel(bot, GUILD, channel_to_send).send(
+  guild = DiscordBot().get_guild(GUILD);
+  await DiscordBot().get_channel(guild, channel_to_send).send(
     "**Hope you all have enjoyed Palettober! I will stop the reminder messages from here on. \nWe will have more things coming our way so stay tuned uwu**",
     file = discord.File(os.path.join(os.getcwd(), "happy.png"))
   )
@@ -127,7 +129,7 @@ async def get_scores(command = False):
       output.append("No submissions yet.. Draw something!")
 
     channel_to_send = "bot-spam" if command else INKTOBER_REPORT_CHANNEL
-    await get_channel(bot, GUILD, channel_to_send).send(
+    await DiscordBot().get_channel(guild, channel_to_send).send(
       "**:art: :speaker: Your friendly DRAWTOBER announcement!**\n%s\n" % ("https://discord.com/channels/668080486257786880/747465326748368947/893389786667163659") + "".join(output),
       file = discord.File(os.path.join(os.getcwd(), "PALETTE_INKTOBER.jpg"))
     )
@@ -159,6 +161,8 @@ async def update_inktober(user, state, date):
 
 
 async def on_message_inktober(message, approve_queue):
+  bot = DiscordBot().bot
+  guild = DiscordBot().get_guild(GUILD)
   print(bot.user.mentioned_in(message))
   if message.channel.name == INKTOBER_RECEIVE_CHANNEL and \
       bot.user.mentioned_in(message) and \
@@ -182,7 +186,7 @@ async def on_message_inktober(message, approve_queue):
         with open(filename, "wb") as f:
           f.write(response.content)
 
-          message_approve_artwork = await get_channel(bot, GUILD, INKTOBER_APPROVE_CHANNEL).send(
+          message_approve_artwork = await DiscordBot().get_channel(guild, INKTOBER_APPROVE_CHANNEL).send(
             "Theme: %s. \nApprove this post? %s" % (DICT_WEEK_TO_PROMPT[day_to_approve], message.jump_url),
             file = discord.File(os.path.join(os.getcwd(), filename))
           )

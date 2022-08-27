@@ -31,7 +31,6 @@ from config_loader import (
   IS_HEROKU, 
   TOKEN, 
   call_stack,
-  bot, 
 )
 
 import config_loader as cfg
@@ -43,7 +42,6 @@ from controller import inktober as ink
 from controller import waifuwars as waf
 from config_loader import load_config
 from controller.DiscordBot import DiscordBot
-
 
 from controller.excelHandler import (
   INKTOBER_STATE,

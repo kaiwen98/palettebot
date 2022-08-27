@@ -36,11 +36,14 @@ STATE_DID_NOT_ATTEMPT = 0
 STATE_UNDER_APPROVAL = 1
 STATE_APPROVED = 2
 
+# Note: You can go to the sheets link via the following link:
+# https://docs.google.com/spreadsheets/d/{{DOCID}}
+
 DOCID_PALETTE_PARTICULARS_SURVEY = "1s0srCxt7ohWl9VnrYwkozd_reEhUWjKzUG-Q4vB_1co"
 DOCID_BIRTHDAY_TRACKER = "1TJpZvgcr67eVYo2G4hcpN1nSR4kBLuSmomgJMHuGuts"
 DOCID_INKTOBER_TRACKER = "15nz3z8iGWSUqbwJN3xJ0NlqYaSSUt8DiqQHZSAaLlr4"
 
-PATH_TO_CREDENTIALS = "./cred/credentials_excel.json"
+PATH_TO_CREDENTIALS = "./cred/gsheets/credentials_excel.json"
 
 qn_to_colnames = {
     "Timestamp" : "Timestamp",

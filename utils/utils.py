@@ -15,10 +15,11 @@ from utils.commons import (
   DISCORD_MESSAGES_LIMIT
 )
 
-bot = DiscordBot().bot
 
 def get_file_path(*path):
   path = os.path.join(os.getcwd(), *path)
+  if not os.path.isdir(path):
+      return path
   file_name = list(os.listdir(path))[0]
   return os.path.join(path, file_name)
 
@@ -88,7 +89,7 @@ def get_channel(bot, guild_name, channel_name):
 
 def get_guild(bot, guild_name):
   for guild in bot.guilds:
-    if guild.name == guild_name:
+    if guild.name == os.getenv('DISCORD_GUILD'):
       return guild
 
 async def remove_messages(messages_to_delete):
@@ -117,6 +118,7 @@ def get_day_from_message(message):
 
 async def get_attacked_user(message):
   output = []
+  bot = DiscordBot().bot
   if len(message.content.strip().split(" ")) >= 2:
     tags = message.content.strip().split(" ", 1)[1]
     print(tags)
@@ -132,6 +134,7 @@ async def get_attacked_user(message):
 
 async def get_waifu_of_user(id, messages = None):
   print(id)
+  bot = DiscordBot().bot
   if messages is None:
     messages = await get_channel(bot, GUILD, DISCORD_CHANNEL_WAIFU_WARS).history(
       limit = DISCORD_MESSAGES_LIMIT,

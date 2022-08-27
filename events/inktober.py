@@ -15,9 +15,10 @@ from utils.utils import (
 
 import config_loader as cfg
 
-bot = DiscordBot().bot
 
 def register_events():
+
+  bot = DiscordBot().bot
   @bot.command(
     name='ink_resetday', 
     help='Resets day and repeats announcement'
@@ -45,7 +46,7 @@ def register_events():
 
     # try:
 
-    msg_to_approve = await get_msg_by_jump_url(bot, ctx, INKTOBER_APPROVE_CHANNEL, link.strip())   
+    msg_to_approve = await get_msg_by_jump_url(DiscordBot().bot, ctx, INKTOBER_APPROVE_CHANNEL, link.strip())   
     if msg_to_approve is None:
       return
 
@@ -64,7 +65,7 @@ def register_events():
 
     link_to_msg_artwork = msg_to_approve.content.strip().split(" ")[-1]
 
-    msg_artwork = await get_msg_by_jump_url(bot, ctx, INKTOBER_RECEIVE_CHANNEL, link_to_msg_artwork)
+    msg_artwork = await get_msg_by_jump_url(DiscordBot().bot, ctx, INKTOBER_RECEIVE_CHANNEL, link_to_msg_artwork)
     day = get_day_from_message(msg_artwork)
 
     DiscordBot().approve_queue.append({

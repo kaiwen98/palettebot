@@ -30,9 +30,10 @@ import pandas as pd
 
 import config_loader as cfg
 
-bot = DiscordBot().bot
 
 def register_events():
+
+  bot = DiscordBot().bot
   @bot.command(
     name='bd_setdelay', 
     help='Change birthday delay in seconds.'

@@ -22,6 +22,7 @@ if __name__ == "__main__":
   register_events_inktober()
   register_events_messages()
   register_events_waifuwars()
+
   DiscordBot().run()
 
 

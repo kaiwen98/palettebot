@@ -35,7 +35,6 @@ import pandas as pd
 
 import config_loader as cfg
 
-bot = DiscordBot().bot
 """
     This code is referenced from https://medium.com/@tonite/finding-the-invite-code-a-user-used-to-join-your-discord-server-using-discord-py-5e3734b8f21f
 
@@ -44,6 +43,7 @@ bot = DiscordBot().bot
 """
 
 def register_events():
+  bot = DiscordBot().bot
   @bot.event
   async def on_member_remove(member):
 

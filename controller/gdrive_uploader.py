@@ -12,8 +12,12 @@ from utils.commons import DRIVE__PALETTE_REP_TRACKER
 from utils.utils import get_file_path
 
 gauth = GoogleAuth()
+print(
+  get_file_path("cred", "gdrive", "credentials.json")
+)
+
 gauth.LoadCredentialsFile(
-  get_file_path("cred", "gdrive")
+  get_file_path("cred", "gdrive", "credentials.json")
 )
 
 drive = GoogleDrive(gauth)  
