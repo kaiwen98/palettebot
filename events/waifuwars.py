@@ -20,10 +20,8 @@ from config_loader import (
     WAIFUWARS_APPROVE_CHANNEL,
     WAIFUWARS_RECEIVE_CHANNEL, 
     WAIFUWARS_REPORT_CHANNEL, 
-    IS_HEROKU, 
+    IS_PRODUCTION, 
     TOKEN, 
-    call_stack,
-    call_stack_waifuwars,
 )
 
 import config_loader as cfg

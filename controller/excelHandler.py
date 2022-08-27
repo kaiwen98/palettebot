@@ -6,7 +6,6 @@ Always try to use your local directory when you are developing. In which case, l
 
 from datetime import datetime
 import pandas as pd
-from pandas.tseries.offsets import BDay
 from dotenv import load_dotenv
 
 import re, urllib
@@ -39,9 +38,10 @@ STATE_APPROVED = 2
 # Note: You can go to the sheets link via the following link:
 # https://docs.google.com/spreadsheets/d/{{DOCID}}
 
-DOCID_PALETTE_PARTICULARS_SURVEY = "1s0srCxt7ohWl9VnrYwkozd_reEhUWjKzUG-Q4vB_1co"
-DOCID_BIRTHDAY_TRACKER = "1TJpZvgcr67eVYo2G4hcpN1nSR4kBLuSmomgJMHuGuts"
-DOCID_INKTOBER_TRACKER = "15nz3z8iGWSUqbwJN3xJ0NlqYaSSUt8DiqQHZSAaLlr4"
+DOCID_PALETTE_PARTICULARS_SURVEY = os.getenv("DOCID_PALETTE_PARTICULARS_SURVEY")
+DOCID_BIRTHDAY_TRACKER = os.getenv("DOCID_BIRTHDAY_TRACKER")
+DOCID_INKTOBER_TRACKER = os.getenv("DOCID_INKTOBER_TRACKER")
+DOCID_WEEKLYPROMPTS_TRACKER = os.getenv("DOCID_WEEKLYPROMPTS_TRACKER")
 
 PATH_TO_CREDENTIALS = "./cred/gsheets/credentials_excel.json"
 
@@ -167,6 +167,26 @@ def update_inktober_state_to_gsheets(df):
         # print("haha")
         # print([_df.columns.values.tolist()] + values)
         i[0].update([_df.columns.values.tolist()] + values)
+
+def update_weeklyprompt_state_to_gsheets(df):
+    sheet = get_spreadsheet_from_drive(DOCID_WEEKLYPROMPTS_TRACKER).worksheets()
+    df1 = sheet[0]
+    df2 = sheet[1]
+    sheet1_rows = len(df1.get_all_values())-1
+    # print(df[MEMBER_INFO_COL_BDATE])
+    print(df)
+    for i in [(df1, "Juniors", [0, sheet1_rows-1]), (df2, "Seniors", [sheet1_rows, df.shape[0]-1])]:
+        # print(i[1])
+        _df = pd.DataFrame(i[0].get_all_values())
+        _df = correct_df_header(_df, name_dict = None)
+        for j in [INKTOBER_STATE, WAIFUWARS_NUMATTACKING, WAIFUWARS_NUMATTACKED]:
+            print(j)
+            _df[j] = df[j].loc[i[2][0]:i[2][1]].values.tolist()
+        values = _df.values.tolist()
+        # print("haha")
+        # print([_df.columns.values.tolist()] + values)
+        i[0].update([_df.columns.values.tolist()] + values)
+
 
 def get_spreadsheet_from_drive(docid):
     scope = ['https://spreadsheets.google.com/feeds']

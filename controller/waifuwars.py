@@ -9,16 +9,13 @@ from config_loader import (
     ART_FIGHT_STATE,
     GUILD, 
     DELAY,
+    WAIFUWARS_APPROVE_CHANNEL,
     WAIFUWARS_APPROVE_CHANNEL, 
     WAIFUWARS_RECEIVE_CHANNEL, 
     WAIFUWARS_REPORT_CHANNEL, 
     WAIFUWARS_APPROVE_CHANNEL,
-    WAIFUWARS_RECEIVE_CHANNEL, 
-    WAIFUWARS_REPORT_CHANNEL, 
-    IS_HEROKU, 
+    IS_PRODUCTION, 
     TOKEN, 
-    call_stack,
-    call_stack_waifuwars,
 )
 
 import config_loader as cfg
@@ -138,7 +135,7 @@ async def on_message_waifuwars(message, approve_queue):
     bot = DiscordBot().bot
     print(bot.user.mentioned_in(message))
     global call_stack_waifuwars
-    if message.channel.name == WAIFUWARS_RECEIVE_CHANNEL and \
+    if message.channel.name == os.getenv(WAIFUWARS_RECEIVE_CHANNEL) and \
         bot.user.mentioned_in(message) and \
         message.author != bot.user:
         
@@ -155,7 +152,7 @@ async def on_message_waifuwars(message, approve_queue):
             
             for message_ref_artwork in messages_ref_artwork:
                 if message_ref_artwork.author.id == message.author.id and message.author.name != "okai_iwen":
-                    message_approve_artwork = await get_channel(bot, GUILD, WAIFUWARS_APPROVE_CHANNEL).send(
+                    message_approve_artwork = await get_channel(bot, GUILD, os.getenv(WAIFUWARS_APPROVE_CHANNEL)).send(
                         content = "**Silly, you can't attack yourself!**" 
                     )
                     return
@@ -170,7 +167,7 @@ async def on_message_waifuwars(message, approve_queue):
                 with open(filename, "wb") as f:
                     f.write(response.content)
 
-                message_approve_artwork = await get_channel(bot, GUILD, WAIFUWARS_APPROVE_CHANNEL).send(
+                message_approve_artwork = await get_channel(bot, GUILD, os.getenv(WAIFUWARS_APPROVE_CHANNEL)).send(
                     content = "**<@%s> is attacked!** :gun: :gun: :gun: .\n:princess: :prince: Your waifu/husbando is <%s>!\n:crossed_swords: :crossed_swords: Attacker assaulted from <%s>!\n**Do you concede :flag_white: :flag_white: :flag_white:?**" % \
                         (message_ref_artwork.author.id, message_ref_artwork.jump_url, message.jump_url),
                     file = discord.File(os.path.join(os.getcwd(), filename)),
@@ -188,14 +185,14 @@ async def on_message_waifuwars(message, approve_queue):
 
                 await message_approve_artwork.add_reaction(WAIFUWARS_CONCEDE_SIGN)
 
-                # await get_channel(bot, GUILD, WAIFUWARS_RECEIVE_CHANNEL).send(
+                # await get_channel(bot, GUILD, os.getenv(WAIFUWARS_RECEIVE_CHANNEL)).send(
                 #     "Received! <@%s>" % (message.author.id)
                 # )
 
                 clear_folder()
 
         else:
-            await get_channel(bot, GUILD, WAIFUWARS_RECEIVE_CHANNEL).send(
+            await get_channel(bot, GUILD, os.getenv(WAIFUWARS_RECEIVE_CHANNEL)).send(
                 "You did not attach an artwork image!"
             )
 
@@ -213,7 +210,7 @@ async def get_scores(command = False):
     guild = DiscordBot().get_guild(GUILD)
     channel_to_send = DiscordBot().get_channel(
         guild, 
-        "bot-spam" if command else WAIFUWARS_REPORT_CHANNEL
+        "bot-spam" if command else os.getenv(WAIFUWARS_REPORT_CHANNEL)
     )
 
     df_discord_members = pd.DataFrame({

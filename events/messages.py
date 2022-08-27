@@ -42,18 +42,19 @@ def register_events():
     bot = DiscordBot().bot
     @bot.event
     async def on_message(message):
-        if message.channel.name == "bot-spam":
-            await bot.process_commands(message)
-            return 
+        print(message)
         if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
-            await ink.on_message_inktober(message, DiscordBot().approve_queue)
+            await ink.on_message(message, DiscordBot().approve_queue)
         elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
             await waf.on_message_waifuwars(message, DiscordBot().approve_queue)
+        elif message.channel.name == "bot-spam":
+            await bot.process_commands(message)
+            return 
 
-            @bot.event
-            async def on_raw_reaction_add(payload):
-                if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
-                    await ink.on_raw_reaction_add_inktober(payload, DiscordBot().approve_queue)
+    @bot.event
+    async def on_raw_reaction_add(payload):
+        if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
+            await ink.on_raw_reaction_add(payload, DiscordBot().approve_queue)
         elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
             await waf.on_raw_reaction_add_waifuwars(payload, DiscordBot().approve_queue)
 

@@ -4,6 +4,8 @@ Consolidates all commands that is related to the birthdayTracker.
 import controller
 from controller.DiscordBot import DiscordBot
 from controller import inktober as ink
+from controller import waifuwars as waf
+
 import asyncio
 from controller.birthdayTracker import birthday_task
 from controller.commons import (

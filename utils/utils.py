@@ -4,9 +4,7 @@ import os
 
 from config_loader import (
   GUILD, 
-  IS_HEROKU, 
-  call_stack, 
-  call_stack_waifuwars, 
+  IS_PRODUCTION, 
 )
 from controller.DiscordBot import DiscordBot
 from utils.commons import (
@@ -45,7 +43,7 @@ def get_timestamp_from_curr_datetime():
 
 def get_today_date():
   date = datetime.now() + timedelta(hours = 8) if os.getenv("ENV") == "production" else datetime.now()
-  return date.date().day
+  return date.date()
 
 def get_num_days_away(member_date):
   dummy_member_date = datetime(
@@ -114,7 +112,7 @@ def get_day_from_message(message):
   if len(message.content.strip().split(" ")) == 2:
     return int(message.content.strip().split(" ")[1])
   else:
-    return get_today_date()
+    return get_today_date().day
 
 async def get_attacked_user(message):
   output = []

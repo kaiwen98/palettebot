@@ -31,6 +31,7 @@ class DiscordBot(metaclass=Singleton):
     return None if len(filtered_guilds) == 0 else filtered_guilds[0]
 
   def get_channel(self, guild, channel_name):
+    print(channel_name)
     filtered_channels = list(filter(
       lambda channel: channel_name in channel.name,
       guild.channels

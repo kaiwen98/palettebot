@@ -15,23 +15,7 @@ from discord.utils import get
 import requests
 from datetime import datetime, time, timedelta
 from zipfile import ZipFile
-from config_loader import (
-  ART_FIGHT_MODE_INKTOBER,
-  ART_FIGHT_MODE_WAIFUWARS,
-  ART_FIGHT_STATE,
-  GUILD, 
-  DELAY,
-  BIRTHDAY_REPORT_CHANNEL,
-  INKTOBER_APPROVE_CHANNEL, 
-  INKTOBER_RECEIVE_CHANNEL, 
-  INKTOBER_REPORT_CHANNEL, 
-  WAIFUWARS_APPROVE_CHANNEL,
-  WAIFUWARS_RECEIVE_CHANNEL, 
-  WAIFUWARS_REPORT_CHANNEL, 
-  IS_HEROKU, 
-  TOKEN, 
-  call_stack,
-)
+
 
 import config_loader as cfg
 from controller.gdrive_uploader import upload_to_gdrive

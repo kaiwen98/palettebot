@@ -5,7 +5,7 @@ import discord
 import pandas as pd
 import requests
 import asyncio
-from config_loader import GUILD, INKTOBER_APPROVE_CHANNEL, INKTOBER_RECEIVE_CHANNEL, INKTOBER_REPORT_CHANNEL, IS_HEROKU, DELAY
+from config_loader import GUILD, INKTOBER_APPROVE_CHANNEL, INKTOBER_RECEIVE_CHANNEL, INKTOBER_REPORT_CHANNEL, IS_PRODUCTION, DELAY
 import config_loader as cfg
 from controller.excelHandler import INKTOBER_STATE, MEMBER_INFO_COL_DISCORD, STATE_APPROVED, STATE_UNDER_APPROVAL, get_fuzzily_discord_handle, set_up_inktober, update_inktober_state_to_gsheets
 from utils.commons import APPROVE_SIGN, DIR_OUTPUT, NOT_APPROVE_SIGN
@@ -88,14 +88,14 @@ async def get_scores(command = False):
       "uid" : [i.id for i in guild.members],
     })
     print(_df_discord_members)
-    if get_today_date(IS_HEROKU) < 11: 
+    if get_today_date(IS_PRODUCTION) < 11: 
       prompt_type = ":potted_plant:"
-    elif get_today_date(IS_HEROKU) < 21:
+    elif get_today_date(IS_PRODUCTION) < 21:
       prompt_type = ":house:"
     else:
       prompt_type = ":ghost:"
     output.append(
-      "Good Morning! Today's Palette Drawtober prompt is ... %s **%s**!\n\n" % (prompt_type, DICT_WEEK_TO_PROMPT[get_today_date(IS_HEROKU)])
+      "Good Morning! Today's Palette Drawtober prompt is ... %s **%s**!\n\n" % (prompt_type, DICT_WEEK_TO_PROMPT[get_today_date(IS_PRODUCTION)])
     )
 
     output.append("**Drawtober Scores!**\n")
