@@ -50,7 +50,8 @@ from controller.excelHandler import (
 from controller.commons import get_list_of_artists
 from utils.commons import (
   DIR_OUTPUT, 
-  DISCORD_CHANNEL_ART_GALLERY, 
+  DISCORD_CHANNEL_ART_GALLERY,
+  DISCORD_GUILD, 
   DISCORD_MESSAGES_LIMIT,
   EXTRAVAGANZA_ROLE,
   MEMBER_ROLE,
@@ -65,6 +66,23 @@ from utils.utils import (
   remove_messages
 )
 
+async def birthday_task():
+  """
+  Entry point to birthday logic. 
+        TODO: Relocate this code to controller/birthday.py 
+  """
+  guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
+  channel = DiscordBot().get_channel(guild, "bot-spam")
+  while True:
+    # try:
+    await handle_check_birthdates_and_give_shoutout()
+    # except Exception as e:
+    #     await channel.send(
+    #         "```Error occured! Contact the administrator. Message: %s```" % (str(e))
+    #     )
+
+    await asyncio.sleep(int(os.getenv(DELAY)))
+
 async def handle_check_birthdates_and_give_shoutout():
   """
   The code should handle birthday logic.
@@ -74,7 +92,7 @@ async def handle_check_birthdates_and_give_shoutout():
   has_sent_week_pic = False
   member_info = set_up_member_info()
 
-  guild = DiscordBot().get_guild(GUILD)
+  guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
 
   df_discord_members = pd.DataFrame({
     "Discord": [member.name + "#" + str(member.discriminator) for member in guild.members],
@@ -83,7 +101,7 @@ async def handle_check_birthdates_and_give_shoutout():
 
   print(df_discord_members)
 
-  channel = DiscordBot().get_channel(guild, BIRTHDAY_REPORT_CHANNEL)
+  channel = DiscordBot().get_channel(guild, os.getenv(BIRTHDAY_REPORT_CHANNEL))
 
   for index, row in member_info.iterrows():
     if get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members, get_uid=True) is None:
@@ -133,21 +151,4 @@ async def handle_check_birthdates_and_give_shoutout():
     print(member_info)
     update_birthday_state_to_gsheets(member_info)
 
-
-async def birthday_task():
-  """
-  Entry point to birthday logic. 
-        TODO: Relocate this code to controller/birthday.py 
-  """
-  guild = DiscordBot().get_guild(GUILD)
-  channel = DiscordBot().get_channel(guild, "bot-spam")
-  while True:
-    # try:
-    await handle_check_birthdates_and_give_shoutout()
-    # except Exception as e:
-    #     await channel.send(
-    #         "```Error occured! Contact the administrator. Message: %s```" % (str(e))
-    #     )
-
-    await asyncio.sleep(DELAY)
 

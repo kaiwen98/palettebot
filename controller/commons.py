@@ -20,22 +20,7 @@ from discord.utils import get
 import requests
 from datetime import datetime, time, timedelta
 from zipfile import ZipFile
-from config_loader import (
-  ART_FIGHT_MODE_INKTOBER,
-  ART_FIGHT_MODE_WAIFUWARS,
-  ART_FIGHT_STATE,
-  GUILD, 
-  DELAY,
-  BIRTHDAY_REPORT_CHANNEL,
-  INKTOBER_APPROVE_CHANNEL, 
-  INKTOBER_RECEIVE_CHANNEL, 
-  INKTOBER_REPORT_CHANNEL, 
-  WAIFUWARS_APPROVE_CHANNEL,
-  WAIFUWARS_RECEIVE_CHANNEL, 
-  WAIFUWARS_REPORT_CHANNEL, 
-  IS_PRODUCTION, 
-  TOKEN, 
-)
+
 
 import config_loader as cfg
 from controller.gdrive_uploader import upload_to_gdrive
@@ -87,7 +72,6 @@ from utils.utils import (
 from utils.utils import (
   calculate_score, 
   clear_folder, 
-  get_channel, 
   get_day_from_message, 
   get_rank_emoji, 
   get_today_date, 
@@ -155,8 +139,8 @@ async def get_photos(input_channel_name, palette_particulars, dd_begin, mm_begin
   channel = DiscordBot().get_channel(guild, input_channel_name)
   artist_name_to_num_artworks = {}
 
-  from_date = datetime(year, mm_begin, dd_begin, 0, 0, 0) - (timedelta(hours = 8) if os.getenv("ENV") == "production" else timedelta(hours = 0))
-  to_date = datetime(year, mm_end, dd_end, 0, 0, 0) - (timedelta(hours = 8) if os.getenv("ENV") == "production" else timedelta(hours = 0))
+  from_date = datetime(year, mm_begin, dd_begin, 0, 0, 0) - (timedelta(hours = 8) if os.getenv(ENV) == "production" else timedelta(hours = 0))
+  to_date = datetime(year, mm_end, dd_end, 0, 0, 0) - (timedelta(hours = 8) if os.getenv(ENV) == "production" else timedelta(hours = 0))
 
   if channel is None: 
     await ctx.send(

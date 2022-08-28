@@ -1,7 +1,8 @@
 """
 Handles Excel Sheet logic.
 If you are not me, you should not temper with this.
-Always try to use your local directory when you are developing. In which case, look at the local_disk functions.
+
+https://docs.gspread.org/en/latest/
 """
 
 from datetime import datetime
@@ -38,10 +39,12 @@ STATE_APPROVED = 2
 # Note: You can go to the sheets link via the following link:
 # https://docs.google.com/spreadsheets/d/{{DOCID}}
 
-DOCID_PALETTE_PARTICULARS_SURVEY = os.getenv("DOCID_PALETTE_PARTICULARS_SURVEY")
-DOCID_BIRTHDAY_TRACKER = os.getenv("DOCID_BIRTHDAY_TRACKER")
-DOCID_INKTOBER_TRACKER = os.getenv("DOCID_INKTOBER_TRACKER")
-DOCID_WEEKLYPROMPTS_TRACKER = os.getenv("DOCID_WEEKLYPROMPTS_TRACKER")
+from utils.commons import (
+    DOCID_INKTOBER_TRACKER,
+    DOCID_PALETTE_PARTICULARS_SURVEY,
+    DOCID_WEEKLYPROMPTS_TRACKER,
+    DOCID_BIRTHDAY_TRACKER
+)
 
 PATH_TO_CREDENTIALS = "./cred/gsheets/credentials_excel.json"
 
@@ -67,90 +70,134 @@ qn_to_colnames = {
 
 csv_data = None
 
-def get_member_info_from_local_disk():
-    """ Used to handle automated birthday celebrations.
-    """
-
-    xls = pd.ExcelFile(PATH_MEMBER_INFO)
-    df1 = pd.read_excel(xls, 'Juniors')
-    df2 = pd.read_excel(xls, 'Seniors')
-    output_dfs = []
-    for i in [df1, df2]:
-        birthdate_df = i
-        if type(birthdate_df[MEMBER_INFO_COL_BDATE].values[0]) is int:
-            birthdate_df[MEMBER_INFO_COL_BDATE].transform(lambda x: x[1:] if not x[0].isnumeric() else x)
-            birthdate_df[MEMBER_INFO_COL_BDATE].transform(lambda x: '0'+ x if len(x) < 8 else x)
-            birthdate_df[MEMBER_INFO_COL_BDATE] = pd.to_datetime(birthdate_df[MEMBER_INFO_COL_BDATE], format='%d%m%Y', errors='coerce')
-        output_dfs.append(birthdate_df)
-    output = pd.concat(output_dfs)
-    print(output)
-    return output.reset_index(drop=True)
-
-def update_birthday_state_to_local_disk(df):
-    xls = pd.ExcelFile(PATH_MEMBER_INFO)
-    df1 = pd.read_excel(xls, 'Juniors')
-    df2 = pd.read_excel(xls, 'Seniors')
-    print(df)
-    print(df.loc[df1.shape[0]: df.shape[0]-1])
-    print(df1.shape)
-    writer = pd.ExcelWriter(PATH_MEMBER_INFO)
-
-    for i in [(df1, "Juniors", [0, df1.shape[0]-1]), (df2, "Seniors", [df1.shape[0], df.shape[0]-1])]:
-        print(i[1])
-        i[0][MEMBER_INFO_BIRTHDAY_STATE] = df[MEMBER_INFO_BIRTHDAY_STATE].loc[i[2][0]:i[2][1]].values
-        i[0].to_excel(writer, sheet_name = i[1])
-    writer.save()   
-
 def get_member_info_from_gsheets():
     """ Used to handle automated birthday celebrations.
     """
-    sheet = get_sheet_df_from_drive(DOCID_BIRTHDAY_TRACKER, name_dict=None)
-    sheet = sheet.reset_index(drop=True)
-    print(sheet)
-    birthdate_df = sheet
+    sheet = get_sheet_df_from_drive(os.getenv(DOCID_BIRTHDAY_TRACKER), name_dict=None)
+    #sheet = sheet.reset_index(drop=True)
     
     # birthdate_df[MEMBER_INFO_COL_BDATE].transform(lambda x: x[1:] if not str(x)[0].isnumeric() else x)
-    birthdate_df[MEMBER_INFO_COL_BDATE] = birthdate_df[MEMBER_INFO_COL_BDATE].transform(lambda x: '0'+ x if len(x) < 8 else x)
+    sheet[MEMBER_INFO_COL_BDATE] = sheet[MEMBER_INFO_COL_BDATE].transform(lambda x: '0'+ x if len(x) < 8 else x)
     # print(birthdate_df)
-    birthdate_df[MEMBER_INFO_COL_BDATE] = pd.to_datetime(birthdate_df[MEMBER_INFO_COL_BDATE], format='%m/%d/%Y', errors='coerce').\
-        fillna(pd.to_datetime(birthdate_df[MEMBER_INFO_COL_BDATE], format="%d%m%Y", errors="coerce"))
+    sheet[MEMBER_INFO_COL_BDATE] = pd \
+        .to_datetime(sheet[MEMBER_INFO_COL_BDATE], format='%m/%d/%Y', errors='coerce') \
+        .fillna(pd.to_datetime(sheet[MEMBER_INFO_COL_BDATE], format="%d%m%Y", errors="coerce"))
 
-    output = birthdate_df
-    # print(output)
-    return output.reset_index(drop=True)
+    return sheet.reset_index(drop=True)
 
 def get_inktober_from_gsheets():
-    """ Used to handle automated birthday celebrations.
+    """ Used to handle Inktober state persistence.
     """
-    sheet = get_sheet_df_from_drive(DOCID_INKTOBER_TRACKER, name_dict=None)
-    sheet = sheet.reset_index(drop=True)
-    print("BEFORE", sheet)
-    birthdate_df = sheet
-    birthdate_df[INKTOBER_STATE] = birthdate_df[INKTOBER_STATE].replace(r'^\s*$', np.nan, regex=True).fillna("0" * 31)
-    birthdate_df[WAIFUWARS_NUMATTACKED] = birthdate_df[WAIFUWARS_NUMATTACKED].replace(r'^\s*$', np.nan, regex=True).fillna("0")
-    birthdate_df[WAIFUWARS_NUMATTACKING] = birthdate_df[WAIFUWARS_NUMATTACKING].replace(r'^\s*$', np.nan, regex=True).fillna("0")
-    output = birthdate_df
-    print("AFTER", output)
+    sheet = get_sheet_df_from_drive(os.getenv(DOCID_INKTOBER_TRACKER), name_dict=None)
+
+    inktober_df = sheet
+
+    # Clean data
+    inktober_df[INKTOBER_STATE] = inktober_df[INKTOBER_STATE] \
+        .replace(r'^\s*$', np.nan, regex=True) \
+        .fillna("0" * 31)
+    inktober_df[WAIFUWARS_NUMATTACKED] = inktober_df[WAIFUWARS_NUMATTACKED] \
+        .replace(r'^\s*$', np.nan, regex=True) \
+        .fillna("0")
+    inktober_df[WAIFUWARS_NUMATTACKING] = inktober_df[WAIFUWARS_NUMATTACKING] \
+        .replace(r'^\s*$', np.nan, regex=True) \
+        .fillna("0")
+
+    output = inktober_df
     return output.reset_index(drop=True)
 
-def update_birthday_state_to_gsheets(df):
-    sheet = get_spreadsheet_from_drive(DOCID_BIRTHDAY_TRACKER).worksheets()
-    df1 = sheet[0]
-    df2 = sheet[1]
-    sheet1_rows = len(df1.get_all_values())-1
-    # print(df[MEMBER_INFO_COL_BDATE])
-    for i in [(df1, "Juniors", [0, sheet1_rows-1]), (df2, "Seniors", [sheet1_rows, df.shape[0]-1])]:
-        # print(i[1])
-        _df = pd.DataFrame(i[0].get_all_values())
-        _df = correct_df_header(_df, name_dict = None)
-        _df[MEMBER_INFO_BIRTHDAY_STATE] = df[MEMBER_INFO_BIRTHDAY_STATE].loc[i[2][0]:i[2][1]].values.tolist()
-        values = _df.values.tolist()
-        # print("haha")
-        # print([_df.columns.values.tolist()] + values)
-        i[0].update([_df.columns.values.tolist()] + values)
+def get_weeklyprompts_from_gsheets():
+    """ 
+    Used to handle Weekly prompts state persistence.
+    """
+    sheet = get_sheet_df_from_drive(os.getenv(DOCID_INKTOBER_TRACKER), name_dict=None)
+
+    inktober_df = sheet
+
+    # Clean data
+    inktober_df[INKTOBER_STATE] = inktober_df[INKTOBER_STATE] \
+        .replace(r'^\s*$', np.nan, regex=True) \
+        .fillna("0" * 31)
+    inktober_df[WAIFUWARS_NUMATTACKED] = inktober_df[WAIFUWARS_NUMATTACKED] \
+        .replace(r'^\s*$', np.nan, regex=True) \
+        .fillna("0")
+    inktober_df[WAIFUWARS_NUMATTACKING] = inktober_df[WAIFUWARS_NUMATTACKING] \
+        .replace(r'^\s*$', np.nan, regex=True) \
+        .fillna("0")
+
+    output = inktober_df
+    return output.reset_index(drop=True)
+
+# def update_birthday_state_to_gsheets(df):
+    # print(os.getenv(DOCID_BIRTHDAY_TRACKER))
+    # sheet = get_spreadsheet_from_drive(os.getenv(DOCID_BIRTHDAY_TRACKER)).worksheets()
+    # print(sheet)
+    # print(sheet[0].title)
+    # df_juniors = sheet[0]
+    # df_seniors = sheet[1]
+    # num_rows_df_seniors = len(df_juniors.get_all_values())-1
+    # # print(df[MEMBER_INFO_COL_BDATE])
+    # for i in [(df_juniors, "Juniors", [0, num_rows_df_seniors-1]), (df_seniors, "Seniors", [num_rows_df_seniors, df.shape[0]-1])]:
+        # # print(i[1])
+        # _df = pd.DataFrame(i[0].get_all_values())
+        # _df = correct_df_header(_df, name_dict = None)
+        # _df[MEMBER_INFO_BIRTHDAY_STATE] = df[MEMBER_INFO_BIRTHDAY_STATE].loc[i[2][0]:i[2][1]].values.tolist()
+        # values = _df.values.tolist()
+        # # print("haha")
+        # # print([_df.columns.values.tolist()] + values)
+        # i[0].update([_df.columns.values.tolist()] + values)
+
+"""
+Unspool the Dataframe and populate along the numerous worksheets in the specified spreadsheet.
+"""
+def update_birthday_state_to_gsheets(input_df):
+    print(os.getenv(DOCID_BIRTHDAY_TRACKER))
+    worksheets = get_spreadsheet_from_drive(os.getenv(DOCID_BIRTHDAY_TRACKER)).worksheets()
+    print(worksheets)
+    print(worksheets[0].title)
+    offset = 0
+    for worksheet in worksheets:
+        print("Updating worksheet: ", worksheet.title)
+        output_df = pd.DataFrame(worksheet.get_all_values())
+        output_df = correct_df_header(output_df, name_dict = None)
+
+        len_worksheet = len(worksheet.get_all_values())
+
+        output_df[MEMBER_INFO_BIRTHDAY_STATE] = input_df[MEMBER_INFO_BIRTHDAY_STATE].loc[offset : offset + len_worksheet - 1].values.tolist()
+
+        offset += len_worksheet
+
+        values = output_df.values.tolist()
+
+        worksheet.update([output_df.columns.values.tolist()] + values)
+
+"""
+Unspool the Dataframe and populate along the numerous worksheets in the specified spreadsheet.
+"""
+def update_inktober_state_to_gsheets(input_df):
+    print(os.getenv(DOCID_BIRTHDAY_TRACKER))
+    worksheets = get_spreadsheet_from_drive(os.getenv(DOCID_BIRTHDAY_TRACKER)).worksheets()
+    print(worksheets)
+    print(worksheets[0].title)
+    offset = 0
+    for worksheet in worksheets:
+        print("Updating worksheet: ", worksheet.title)
+        output_df = pd.DataFrame(worksheet.get_all_values())
+        output_df = correct_df_header(output_df, name_dict = None)
+
+        len_worksheet = len(worksheet.get_all_values())
+        for column in [INKTOBER_STATE, WAIFUWARS_NUMATTACKING, WAIFUWARS_NUMATTACKED]:
+            output_df[column] = input_df[MEMBER_INFO_BIRTHDAY_STATE].loc[offset : offset + len_worksheet - 1].values.tolist()
+
+        offset += len_worksheet
+
+        values = output_df.values.tolist()
+
+        worksheet.update([output_df.columns.values.tolist()] + values)
+
 
 def update_inktober_state_to_gsheets(df):
-    sheet = get_spreadsheet_from_drive(DOCID_INKTOBER_TRACKER).worksheets()
+    sheet = get_spreadsheet_from_drive(os.getenv(DOCID_INKTOBER_TRACKER)).worksheets()
     df1 = sheet[0]
     df2 = sheet[1]
     sheet1_rows = len(df1.get_all_values())-1
@@ -169,7 +216,7 @@ def update_inktober_state_to_gsheets(df):
         i[0].update([_df.columns.values.tolist()] + values)
 
 def update_weeklyprompt_state_to_gsheets(df):
-    sheet = get_spreadsheet_from_drive(DOCID_WEEKLYPROMPTS_TRACKER).worksheets()
+    sheet = get_spreadsheet_from_drive(os.getenv(DOCID_WEEKLYPROMPTS_TRACKER)).worksheets()
     df1 = sheet[0]
     df2 = sheet[1]
     sheet1_rows = len(df1.get_all_values())-1
@@ -200,8 +247,11 @@ def get_spreadsheet_from_drive(docid):
 
     return spreadsheet
 
+"""
+Replace headers with the respective mapping.
+"""
 def correct_df_header(df, name_dict = qn_to_colnames):
-    print(df)
+    # print(df)
     columns = df.iloc[:1, :].values[0]
     df = df.iloc[1:, :]
     if name_dict is not None:
@@ -210,12 +260,16 @@ def correct_df_header(df, name_dict = qn_to_colnames):
         df.columns = columns
     return df
 
+"""
+Get a Dataframe of all spreadsheets in the worksheet, concatanated one against the next.
+"""
 def get_sheet_df_from_drive(docid, name_dict = qn_to_colnames):
     scope = ['https://spreadsheets.google.com/feeds']
     credentials = ServiceAccountCredentials.from_json_keyfile_name(PATH_TO_CREDENTIALS, scope)
     df_list = []
     client = gspread.authorize(credentials)
     spreadsheet = client.open_by_key(docid)
+    # Combine all sheets to one single dataframe.
     for i, worksheet in enumerate(spreadsheet.worksheets()):
         ws = worksheet.get_all_values()
         df = pd.DataFrame(ws)
@@ -315,8 +369,12 @@ def set_up_inktober():
     df = get_inktober_from_gsheets()
     return df
 
+def set_up_weeklyprompts():
+    df = get_inktober_from_gsheets()
+    return df
+
 def set_up_palette_particulars_csv():
-    df = get_sheet_df_from_drive(DOCID_PALETTE_PARTICULARS_SURVEY)
+    df = get_sheet_df_from_drive(os.getenv(DOCID_PALETTE_PARTICULARS_SURVEY))
     return df
 
 import sys
@@ -346,6 +404,7 @@ if __name__ == "__main__":
     #     year=2000
     # )
     # print(dummy_curr_date - dummy_member_date)
-    print(similar_in_name("okai_iwen#1230", "okai_iwen#1230"))
+    #print(similar_in_name("okai_iwen#1230", "okai_iwen#1230"))
+    update_birthday_state_to_gsheets(None)
 
 

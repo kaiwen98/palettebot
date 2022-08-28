@@ -1,6 +1,7 @@
 """
 Consolidates all commands that is related to the birthdayTracker.
 """
+import os
 from controller.DiscordBot import DiscordBot
 from controller import inktober as ink
 import asyncio
@@ -13,11 +14,8 @@ from controller.excelHandler import (
   set_up_member_info,
   update_birthday_state_to_gsheets
 )
-from config_loader import (
-  INKTOBER_APPROVE_CHANNEL,
-  INKTOBER_RECEIVE_CHANNEL,
-  GUILD
-)
+from utils.commons import DISCORD_GUILD
+
 from utils.utils import (
   get_msg_by_jump_url,
   get_day_from_message,
@@ -39,9 +37,8 @@ def register_events():
     help='Change birthday delay in seconds.'
   )
   async def change_bd_delay(ctx, delay):
-    guild = DiscordBot().get_guild(GUILD)
+    guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
     channel = DiscordBot().get_channel(guild, "bot-spam");
-    cfg.DELAY = int(delay)
     await channel.send(
       "```Delay Change Complete!```"
     )
@@ -53,7 +50,7 @@ def register_events():
   async def get_month_birthdays(ctx):
     output = []
     member_info = set_up_member_info()
-    guild = DiscordBot().get_guild(GUILD)
+    guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
     channel = DiscordBot().get_channel(guild, "bot-spam")
     df_discord_members = pd.DataFrame({
       "Discord": [i.name + "#" + str(i.discriminator) for i in guild.members],
@@ -90,7 +87,7 @@ def register_events():
   async def reset_shoutout_counter(ctx):
     member_info = set_up_member_info()
 
-    guild = DiscordBot().get_guild(GUILD)
+    guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
     channel = DiscordBot().get_channel(guild, "bot-spam")
     
     # reset all birthday wishing state to none

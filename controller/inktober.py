@@ -1,15 +1,44 @@
 from datetime import datetime
 import os
+from config_loader import (
+  get_recorded_date, 
+  set_recorded_date
+)
 from controller.DiscordBot import DiscordBot
 import discord
 import pandas as pd
 import requests
 import asyncio
-from config_loader import GUILD, INKTOBER_APPROVE_CHANNEL, INKTOBER_RECEIVE_CHANNEL, INKTOBER_REPORT_CHANNEL, IS_PRODUCTION, DELAY, get_recorded_date, set_recorded_date
-import config_loader as cfg
-from controller.excelHandler import INKTOBER_STATE, MEMBER_INFO_COL_DISCORD, STATE_APPROVED, STATE_UNDER_APPROVAL, get_fuzzily_discord_handle, set_up_inktober, update_inktober_state_to_gsheets
-from utils.commons import APPROVE_SIGN, DIR_OUTPUT, NOT_APPROVE_SIGN, PATH_IMG_HAPPY, PATH_IMG_PALETTOBER_POSTER
-from utils.utils import calculate_score, clear_folder, get_channel, get_day_from_message, get_rank_emoji, get_today_date, remove_messages
+from controller.excelHandler import (
+  INKTOBER_STATE, 
+  MEMBER_INFO_COL_DISCORD, 
+  STATE_APPROVED, 
+  STATE_UNDER_APPROVAL, 
+  get_fuzzily_discord_handle, 
+  set_up_inktober, 
+  update_inktober_state_to_gsheets
+)
+from utils.commons import (
+  APPROVE_SIGN,
+  DELAY, 
+  DIR_OUTPUT,
+  DISCORD_GUILD,
+  INKTOBER_APPROVE_CHANNEL,
+  INKTOBER_RECEIVE_CHANNEL,
+  INKTOBER_REPORT_CHANNEL, 
+  NOT_APPROVE_SIGN, 
+  PATH_IMG_HAPPY, 
+  PATH_IMG_PALETTOBER_POSTER
+)
+from utils.utils import (
+  calculate_score, 
+  clear_folder, 
+  get_channel, 
+  get_day_from_message, 
+  get_rank_emoji, 
+  get_today_date, 
+  remove_messages
+)
 
 
 DICT_DAY_TO_PROMPT = {
@@ -64,7 +93,8 @@ async def inktober_task():
     #     await channel.send(
     #         "```Error occured! Contact the administrator. Message: %s```" % (str(e))
     #     )
-    await asyncio.sleep(int(os.getenv(DELAY)))
+    delay: int = int(os.getenv(DELAY))
+    await asyncio.sleep(delay)
 
 async def get_scores(command = False):
   #print("LOOK!", get_recorded_date(), get_today_date(), datetime.now())
@@ -77,7 +107,7 @@ async def get_scores(command = False):
   output = []
   rank = []
   df_inktober = set_up_inktober()
-  guild = DiscordBot().get_guild(GUILD)
+  guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
   print("report getscores", os.getenv(INKTOBER_REPORT_CHANNEL))
   channel_to_send = DiscordBot().get_channel(
     guild, 
@@ -165,7 +195,7 @@ you append your message to the queue.
 This handler handles the message.
 """
 async def on_message(message, approve_queue):
-  guild = DiscordBot().get_guild(GUILD)
+  guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
   print(DiscordBot().bot.user.mentioned_in(message))
   if (
     # If mentioned in artwork receiving channel
@@ -236,7 +266,7 @@ async def on_raw_reaction_add(payload, approve_queue):
   emoji = payload.emoji.name
   print(emoji)
 
-  guild = DiscordBot().get_guild(GUILD)
+  guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
   message_approve_artwork = await DiscordBot().get_channel(guild, os.getenv(INKTOBER_APPROVE_CHANNEL)).fetch_message(message_approve_artwork_id)
 
   # print(message.id, type(message.id), list(approve_queue.keys()))

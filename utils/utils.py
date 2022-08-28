@@ -2,15 +2,13 @@ from datetime import datetime
 from datetime import timedelta
 import os
 
-from config_loader import (
-  GUILD, 
-  IS_PRODUCTION, 
-)
 from controller.DiscordBot import DiscordBot
 from utils.commons import (
   DIR_OUTPUT, 
-  DISCORD_CHANNEL_WAIFU_WARS, 
-  DISCORD_MESSAGES_LIMIT
+  DISCORD_CHANNEL_WAIFU_WARS,
+  DISCORD_GUILD, 
+  DISCORD_MESSAGES_LIMIT,
+  ENV
 )
 
 
@@ -42,7 +40,11 @@ def get_timestamp_from_curr_datetime():
   return output.strip()
 
 def get_today_date():
-  date = datetime.now() + timedelta(hours = 8) if os.getenv("ENV") == "production" else datetime.now()
+  date = datetime.now() + (
+    timedelta(
+      hours = 8 if os.getenv(ENV) == 'production' else 0
+    )   
+  )
   return date.date()
 
 def get_num_days_away(member_date):
@@ -52,16 +54,20 @@ def get_num_days_away(member_date):
     year=2000
   )
 
-  dummy_curr_date = datetime.now() + timedelta(hours = 8)
+  # +8 hours to account for time zone difference in Heroku
+  dummy_curr_date = datetime.now() + (
+    timedelta(
+      hours = 8 if os.getenv(ENV) == 'production' else 0
+    )   
+  )
+
   dummy_curr_date = datetime(
     day=dummy_curr_date.date().day,
     month=dummy_curr_date.date().month,
     year=2000
   )
 
-
   days_away = dummy_curr_date - dummy_member_date 
-  # +8 hours to account for time zone difference in Heroku
   # print(
   #     "current time: ", dummy_curr_date,
   #     "bday: ", dummy_member_date
@@ -74,21 +80,6 @@ def get_num_days_away(member_date):
     num_days_away = 365 + num_days_away
     return num_days_away
 
-def get_channel(bot, guild_name, channel_name):
-  for guild in bot.guilds:
-    if guild.name == guild_name:
-      break
-    for g_channel in guild.channels:
-      if channel_name in g_channel.name:
-        channel = guild.get_channel(g_channel.id)
-        return channel
-
-    return False
-
-def get_guild(bot, guild_name):
-  for guild in bot.guilds:
-    if guild.name == os.getenv('DISCORD_GUILD'):
-      return guild
 
 async def remove_messages(messages_to_delete):
   for message in messages_to_delete:
@@ -120,7 +111,7 @@ async def get_attacked_user(message):
   if len(message.content.strip().split(" ")) >= 2:
     tags = message.content.strip().split(" ", 1)[1]
     print(tags)
-    messages = await get_channel(bot, GUILD, DISCORD_CHANNEL_WAIFU_WARS).history(
+    messages = await DiscordBot().get_channel(None, DISCORD_CHANNEL_WAIFU_WARS).history(
       limit = DISCORD_MESSAGES_LIMIT,
     ).flatten()
     for tag in tags.strip().split(" "):
@@ -134,7 +125,7 @@ async def get_waifu_of_user(id, messages = None):
   print(id)
   bot = DiscordBot().bot
   if messages is None:
-    messages = await get_channel(bot, GUILD, DISCORD_CHANNEL_WAIFU_WARS).history(
+    messages = await DiscordBot().get_channel(None, DISCORD_CHANNEL_WAIFU_WARS).history(
       limit = DISCORD_MESSAGES_LIMIT,
     ).flatten()
     for message in messages: 
@@ -149,7 +140,7 @@ def get_id_from_tag(tag):
 
 async def get_msg_by_jump_url(bot, ctx, channel, jump_url):
 
-  guild = DiscordBot().get_guild(GUILD)
+  guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
   channel = DiscordBot().get_channel(guild, channel)
 
   if channel is None: 

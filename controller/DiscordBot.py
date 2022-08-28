@@ -4,6 +4,8 @@ import discord
 import discord.ext as d_ext
 import os
 
+from utils.commons import DISCORD_GUILD
+
 class DiscordBot(metaclass=Singleton):
   def __init__(self):
     intents = discord.Intents.default()
@@ -32,6 +34,9 @@ class DiscordBot(metaclass=Singleton):
 
   def get_channel(self, guild, channel_name):
     print(channel_name)
+    if guild is None:
+      guild = self.get_guild(os.getenv(DISCORD_GUILD))
+
     filtered_channels = list(filter(
       lambda channel: channel_name in channel.name,
       guild.channels
