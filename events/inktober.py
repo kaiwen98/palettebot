@@ -1,7 +1,7 @@
 """
 Consolidates all commands that is related to Inktober.
 """
-from controller.DiscordBot import DiscordBot
+from models.DiscordBot import DiscordBot
 from controller import inktober as ink
 import asyncio
 from utils.utils import (

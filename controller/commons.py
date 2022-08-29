@@ -4,7 +4,7 @@ import re
 from utils.commons import DIR_OUTPUT, ENV
 
 from controller.excelHandler import set_up_member_info
-from controller.DiscordBot import DiscordBot
+from models.DiscordBot import DiscordBot
 import pandas as pd
 
 import code
@@ -25,7 +25,7 @@ from controller.inktober import DICT_DAY_TO_PROMPT
 from controller import inktober as ink
 from controller import waifuwars as waf
 from config_loader import load_config
-from controller.DiscordBot import DiscordBot
+from models.DiscordBot import DiscordBot
 
 
 from controller.excelHandler import (

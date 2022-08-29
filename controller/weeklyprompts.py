@@ -4,16 +4,13 @@ from config_loader import (
   get_recorded_date, 
   set_recorded_date
 )
-from controller.DiscordBot import DiscordBot
+from models.DiscordBot import DiscordBot
 import discord
 import pandas as pd
 import requests
 import asyncio
 from controller.excelHandler import (
-  INKTOBER_STATE, 
   MEMBER_INFO_COL_DISCORD, 
-  STATE_APPROVED, 
-  STATE_UNDER_APPROVAL, 
   get_fuzzily_discord_handle, 
   set_up_inktober, 
   update_inktober_state_to_gsheets
@@ -33,7 +30,6 @@ from utils.commons import (
 from utils.utils import (
   calculate_score, 
   clear_folder, 
-  get_channel, 
   get_day_from_message, 
   get_rank_emoji, 
   get_today_date, 
@@ -77,14 +73,13 @@ DICT_WEEK_TO_PROMPT = {
 }
 
 async def inktober_task():
-  counter = 0
   channel_to_send = os.getenv(INKTOBER_REPORT_CHANNEL)
   # await DiscordBot().get_channel(GUILD, channel_to_send).send(
   # "**Hope you all have enjoyed Palettober! I will stop the reminder messages from here on. \nWe will have more things coming our way so stay tuned uwu**",
   # file = discord.File(PATH_IMG_HAPPY)
   # )
 
-  print("Starting Inktober Applet...")
+  print("Starting WeeklyPrompt Applet...")
   while True:
     # do something
 

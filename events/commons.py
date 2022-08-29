@@ -2,7 +2,7 @@
 Consolidates all commands that is related to the birthdayTracker.
 """
 import controller
-from controller.DiscordBot import DiscordBot
+from models.DiscordBot import DiscordBot
 from controller import inktober as ink
 from controller import waifuwars as waf
 
@@ -16,7 +16,6 @@ from controller.excelHandler import (
 	MEMBER_INFO_BIRTHDAY_STATE,
 	MEMBER_INFO_COL_BDATE,
 	MEMBER_INFO_COL_DISCORD,
-	STATE_NO_SHOUTOUTS,
 	get_fuzzily_discord_handle,
 	set_up_member_info,
 	set_up_palette_particulars_csv,
@@ -60,13 +59,16 @@ def register_events():
 
 			# print(guild.roles)
 
-			print(f'{bot.user} has connected to Discord!')
-			if os.getenv("ENV") == "production":
-				bot.loop.create_task(birthday_task())
-			if os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
-				bot.loop.create_task(ink.inktober_task())
-			elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WAIFUWARS:
-				bot.loop.create_task(waf.waifuwars_task())
+		print(f'{bot.user} has connected to Discord!')
+		if os.getenv("ENV") == "production":
+			bot.loop.create_task(birthday_task())
+		if os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
+			bot.loop.create_task(ink.inktober_task())
+		elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WAIFUWARS:
+			bot.loop.create_task(waf.waifuwars_task())
+
+		bot.loop.create_task(DiscordBot().task())
+
 
 
 	@bot.command(

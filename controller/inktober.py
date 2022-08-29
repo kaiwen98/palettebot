@@ -4,16 +4,12 @@ from config_loader import (
   get_recorded_date, 
   set_recorded_date
 )
-from controller.DiscordBot import DiscordBot
+from models.DiscordBot import DiscordBot, Player
 import discord
 import pandas as pd
 import requests
 import asyncio
 from controller.excelHandler import (
-  INKTOBER_STATE, 
-  MEMBER_INFO_COL_DISCORD, 
-  STATE_APPROVED, 
-  STATE_UNDER_APPROVAL, 
   get_fuzzily_discord_handle, 
   set_up_inktober, 
   update_inktober_state_to_gsheets
@@ -23,12 +19,16 @@ from utils.commons import (
   DELAY, 
   DIR_OUTPUT,
   DISCORD_GUILD,
+  GSHEET_COLUMN_DISCORD,
+  GSHEET_INKTOBER_COLUMN_STATE,
   INKTOBER_APPROVE_CHANNEL,
   INKTOBER_RECEIVE_CHANNEL,
   INKTOBER_REPORT_CHANNEL, 
   NOT_APPROVE_SIGN, 
   PATH_IMG_HAPPY, 
-  PATH_IMG_PALETTOBER_POSTER
+  PATH_IMG_PALETTOBER_POSTER,
+  STATE_APPROVED,
+  STATE_UNDER_APPROVAL
 )
 from utils.utils import (
   calculate_score, 
@@ -135,12 +135,12 @@ async def get_scores(command = False):
     for index, row in df_inktober.iterrows():
       try:
 
-        if get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members) is None:
+        if get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members) is None:
           continue
 
-        user_score_pair = (get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members), calculate_score(row[INKTOBER_STATE]))
+        user_score_pair = (get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members), calculate_score(row[GSHEET_INKTOBER_COLUMN_STATE]))
 
-        if str(STATE_APPROVED) in list(row[INKTOBER_STATE]):
+        if str(STATE_APPROVED) in list(row[GSHEET_INKTOBER_COLUMN_STATE]):
           rank.append(user_score_pair)
 
       except Exception as e:
@@ -154,8 +154,7 @@ async def get_scores(command = False):
         get_rank_emoji(index + 1),
         _user_score_pair[0], 
         _user_score_pair[1],
-      )
-                    )
+      ))
 
     if len(rank) == 0:
       output.append("No submissions yet.. Draw something!")
@@ -178,13 +177,12 @@ async def update_inktober(user, state, date):
   for index, row in df_inktober.iterrows():
     # iterates over the sheet
     # print(row[MEMBER_INFO_COL_DISCORD])
-    if get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members, get_uid=True) is None:
+    if get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members, get_uid=True) is None:
       continue
-
-
-    state_ls = list(row[INKTOBER_STATE])
+    
+    state_ls = list(row[GSHEET_INKTOBER_COLUMN_STATE])
     state_ls[date] = str(state)
-    df_inktober.at[index, INKTOBER_STATE] = "".join(state_ls)
+    df_inktober.at[index, GSHEET_INKTOBER_COLUMN_STATE] = "".join(state_ls)
     # print("HEREEEEEEEEEEEE", _df_inktober.at[index, INKTOBER_STATE])
     update_inktober_state_to_gsheets(df_inktober)
 
@@ -211,7 +209,6 @@ async def on_message(message, approve_queue):
     # if no io/ existing in the system, make io/
     if "io" not in os.listdir(os.getcwd()):
       os.mkdir(DIR_OUTPUT)
-      print("there")
 
     if len(message.attachments) <= 0 :
       return await DiscordBot().get_channel(guild, os.getenv(INKTOBER_RECEIVE_CHANNEL)).send(

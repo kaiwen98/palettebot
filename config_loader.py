@@ -7,7 +7,7 @@ from datetime import datetime
 import discord
 from discord.ext import commands
 import getopt, sys
-from controller.DiscordBot import DiscordBot
+from models.DiscordBot import DiscordBot
 from utils.commons import (
   ART_FIGHT_MODE_INKTOBER, 
   ART_FIGHT_MODE_NOTHING,

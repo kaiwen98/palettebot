@@ -9,7 +9,7 @@ from config_loader import (
 )
 
 import config_loader as cfg
-from controller.DiscordBot import DiscordBot
+from models.DiscordBot import DiscordBot
 from controller.gdrive_uploader import upload_to_gdrive
 import asyncio
 import pandas as pd

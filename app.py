@@ -1,6 +1,6 @@
 import config_loader as cfg
 import os
-from controller.DiscordBot import DiscordBot
+from models.DiscordBot import DiscordBot
 
 from events.commons import register_events as register_events_commons
 from events.birthdayTracker import register_events as register_events_birthday

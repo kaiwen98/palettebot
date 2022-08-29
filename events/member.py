@@ -3,7 +3,7 @@
 Consolidates all commands that is related to the birthdayTracker.
 """
 from discord.utils import get
-from controller.DiscordBot import DiscordBot
+from models.DiscordBot import DiscordBot
 from controller import inktober as ink
 import discord
 import asyncio
@@ -11,7 +11,6 @@ from controller.excelHandler import (
   MEMBER_INFO_BIRTHDAY_STATE,
   MEMBER_INFO_COL_BDATE,
   MEMBER_INFO_COL_DISCORD,
-  STATE_NO_SHOUTOUTS,
   get_fuzzily_discord_handle,
   set_up_member_info,
   update_birthday_state_to_gsheets

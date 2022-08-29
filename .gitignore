@@ -3,3 +3,4 @@ env
 **/*.json
 **/__pycache__
 settings.yaml
+cred

@@ -2,7 +2,7 @@ from datetime import datetime
 from datetime import timedelta
 import os
 
-from controller.DiscordBot import DiscordBot
+from models.DiscordBot import DiscordBot
 from utils.commons import (
   DIR_OUTPUT, 
   DISCORD_CHANNEL_WAIFU_WARS,
@@ -38,6 +38,14 @@ def clear_folder(folder = "io"):
 def get_timestamp_from_curr_datetime():
   output = datetime.now().strftime("%m%d%Y_%H%M%S")
   return output.strip()
+
+def get_week_from_curr_datetime(input_datetime):
+  sem1_week_offset = datetime(datetime.today().year, 8, 9)
+  sem2_week_offset = datetime(datetime.today().year, 1, 9)
+  return input_datetime.isocalendar()[1] + 1 - \
+    sem1_week_offset.isocalendar()[1] \
+    if input_datetime > sem1_week_offset \
+    else sem2_week_offset.isocalendar()[1]
 
 def get_today_date():
   date = datetime.now() + (

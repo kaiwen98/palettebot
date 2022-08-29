@@ -1,7 +1,6 @@
 """
 Consolidates all commands that is related to Inktober.
 """
-from controller.DiscordBot import DiscordBot
 import asyncio
 import os
 import discord
@@ -11,33 +10,12 @@ from zipfile import ZipFile
 
 
 import config_loader as cfg
-from controller.DiscordBot import DiscordBot
+from models.DiscordBot import DiscordBot
 from controller.gdrive_uploader import upload_to_gdrive
 import asyncio
 import pandas as pd
 from discord.ext import commands
 
-from controller.excelHandler import (
-    INKTOBER_STATE,
-    MEMBER_INFO_BIRTHDAY_STATE,
-    MEMBER_INFO_COL_BDATE,
-    MEMBER_INFO_COL_DISCORD,
-    STATE_APPROVED,
-    STATE_NO_SHOUTOUTS,
-    STATE_SHOUTOUT_DAY,
-    STATE_SHOUTOUT_WEEK,
-    STATE_UNDER_APPROVAL,
-    WAIFUWARS_NUMATTACKED,
-    WAIFUWARS_NUMATTACKING,
-    get_fuzzily_discord_handle, 
-    pretty_print_social_handle_wrapper,
-    set_up_inktober,
-    set_up_member_info, 
-    set_up_palette_particulars_csv,
-    update_birthday_state_to_gsheets,
-    update_inktober_state_to_gsheets, 
-    verify_is_okay_to_share_by_discord_name
-)
 from controller.commons import get_list_of_artists
 from controller.inktober import DICT_DAY_TO_PROMPT
 from controller.waifuwars import update_waifuwars

@@ -1,5 +1,5 @@
 from controller.excelHandler import set_up_member_info
-from controller.DiscordBot import DiscordBot
+from models.DiscordBot import DiscordBot
 import pandas as pd
 
 import code
@@ -20,7 +20,7 @@ from controller.inktober import DICT_DAY_TO_PROMPT
 from controller import inktober as ink
 from controller import waifuwars as waf
 from config_loader import load_config
-from controller.DiscordBot import DiscordBot
+from models.DiscordBot import DiscordBot
 
 from controller.excelHandler import (
   INKTOBER_STATE,
@@ -68,7 +68,9 @@ async def birthday_task():
         TODO: Relocate this code to controller/birthday.py 
   """
   guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
-  channel = DiscordBot().get_channel(guild, "bot-spam")
+  channel = DiscordBot().get_channel(guild, os.getenv(BIRTHDAY_REPORT_CHANNEL))
+
+  print("Starting Birthday Applet...")
   while True:
     # try:
     await handle_check_birthdates_and_give_shoutout()
@@ -105,7 +107,7 @@ async def handle_check_birthdates_and_give_shoutout():
 
     try:
       if get_num_days_away(row[MEMBER_INFO_COL_BDATE].date()) == 0 and \
-          (int(row[MEMBER_INFO_BIRTHDAY_STATE]) & STATE_SHOUTOUT_DAY == 0):
+          (int(row[MEMBER_INFO_BIRTHDAY_STATE]) != STATE_SHOUTOUT_DAY):
         # Birthday is today,
 
         if has_sent_bday_pic is False:
@@ -120,11 +122,11 @@ async def handle_check_birthdates_and_give_shoutout():
             (get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members, get_uid=True)),
           )  
 
-          member_info.at[index, MEMBER_INFO_BIRTHDAY_STATE] = int(row[MEMBER_INFO_BIRTHDAY_STATE]) | STATE_SHOUTOUT_DAY
+          member_info.at[index, MEMBER_INFO_BIRTHDAY_STATE] = STATE_SHOUTOUT_DAY
 
         elif get_num_days_away(row[MEMBER_INFO_COL_BDATE].date()) <= 7 and \
           get_num_days_away(row[MEMBER_INFO_COL_BDATE].date()) > 0 and \
-          (int(row[MEMBER_INFO_BIRTHDAY_STATE]) & STATE_SHOUTOUT_WEEK == 0):
+          (int(row[MEMBER_INFO_BIRTHDAY_STATE]) != STATE_SHOUTOUT_WEEK):
           # Birthday is a week away,
 
           if has_sent_week_pic is False:
@@ -137,7 +139,7 @@ async def handle_check_birthdates_and_give_shoutout():
               "<@%s> 's birthday is less than a week away! Are yall excited :))) :eyes: :eyes: :eyes:" % \
               (get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members, get_uid=True)),
             )  
-            member_info.at[index, MEMBER_INFO_BIRTHDAY_STATE] = int(row[MEMBER_INFO_BIRTHDAY_STATE]) | STATE_SHOUTOUT_WEEK
+            member_info.at[index, MEMBER_INFO_BIRTHDAY_STATE] = STATE_SHOUTOUT_WEEK
 
           elif datetime.now().day == 1 and datetime.now().month == 1:
             member_info[MEMBER_INFO_BIRTHDAY_STATE] = [STATE_NO_SHOUTOUTS for i in range(member_info.shape[0])]
