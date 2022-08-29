@@ -33,7 +33,6 @@ from utils.commons import (
 from utils.utils import (
   calculate_score, 
   clear_folder, 
-  get_channel, 
   get_day_from_message, 
   get_rank_emoji, 
   get_today_date, 

@@ -8,21 +8,7 @@ import discord
 import requests
 from datetime import datetime, time, timedelta
 from zipfile import ZipFile
-from config_loader import (
-    ART_FIGHT_MODE_WAIFUWARS,
-    ART_FIGHT_MODE_WAIFUWARS,
-    ART_FIGHT_STATE,
-    GUILD, 
-    DELAY,
-    WAIFUWARS_APPROVE_CHANNEL, 
-    WAIFUWARS_RECEIVE_CHANNEL, 
-    WAIFUWARS_REPORT_CHANNEL, 
-    WAIFUWARS_APPROVE_CHANNEL,
-    WAIFUWARS_RECEIVE_CHANNEL, 
-    WAIFUWARS_REPORT_CHANNEL, 
-    IS_PRODUCTION, 
-    TOKEN, 
-)
+
 
 import config_loader as cfg
 from controller.DiscordBot import DiscordBot
@@ -49,7 +35,6 @@ from controller.excelHandler import (
     set_up_member_info, 
     set_up_palette_particulars_csv,
     update_birthday_state_to_gsheets,
-    update_birthday_state_to_local_disk,
     update_inktober_state_to_gsheets, 
     verify_is_okay_to_share_by_discord_name
 )
@@ -63,13 +48,13 @@ from utils.commons import (
     DISCORD_CHANNEL_ART_GALLERY, 
     DISCORD_MESSAGES_LIMIT,
     NOT_APPROVE_SIGN,
+    WAIFUWARS_APPROVE_CHANNEL,
     WAIFUWARS_CONCEDE_SIGN
 )
 from utils.utils import (
     calculate_score, 
     clear_folder,
     get_attacked_user, 
-    get_channel, 
     get_day_from_message,
     get_msg_by_jump_url, 
     get_num_days_away, 
@@ -107,7 +92,7 @@ def register_events():
       user = payload.member
       emoji = payload.emoji.name
       print(emoji)
-      guild = DiscordBot().get_guild(GUILD)
+      guild = DiscordBot().get_guild(None)
       message_approve_artwork = await DiscordBot().get_channel(guild, WAIFUWARS_APPROVE_CHANNEL).fetch_message(message_approve_artwork_id)
       # print(message.id, type(message.id), list(approve_queue.keys()))
 
@@ -120,7 +105,7 @@ def register_events():
           print(2)
           return 
 
-      if message_approve_artwork.channel.name != WAIFUWARS_APPROVE_CHANNEL:
+      if message_approve_artwork.channel.name != os.getenv(WAIFUWARS_APPROVE_CHANNEL):
           print(3)
           return
 
@@ -133,7 +118,7 @@ def register_events():
       print(approve_queue)
 
       if emoji == WAIFUWARS_CONCEDE_SIGN:
-          await DiscordBot().get_channel(guild, WAIFUWARS_APPROVE_CHANNEL).send(
+          await DiscordBot().get_channel(guild, os.getenv(WAIFUWARS_APPROVE_CHANNEL)).send(
                       "**<@%s> conceded to this post!**:flag_white: :flag_white: :flag_white: \n**<@%s> won a WAIFU & HUSBANDO  WAR round! **:trophy: \n%s" % (user.id, message_artwork.author.id, message_artwork.jump_url),
                   )
           await update_waifuwars(attacked_user, attacking_user, approve_request_to_service)

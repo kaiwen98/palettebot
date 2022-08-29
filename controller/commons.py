@@ -1,13 +1,8 @@
 import os
 import re
 
-from utils.commons import DIR_OUTPUT
+from utils.commons import DIR_OUTPUT, ENV
 
-from config_loader import (
-  BIRTHDAY_REPORT_CHANNEL,
-  GUILD,
-  DELAY
-)
 from controller.excelHandler import set_up_member_info
 from controller.DiscordBot import DiscordBot
 import pandas as pd
@@ -49,7 +44,6 @@ from controller.excelHandler import (
   set_up_member_info, 
   set_up_palette_particulars_csv,
   update_birthday_state_to_gsheets,
-  update_birthday_state_to_local_disk,
   update_inktober_state_to_gsheets, 
   verify_is_okay_to_share_by_discord_name
 )
@@ -104,7 +98,7 @@ def get_list_of_artists(path):
 
 async def get_all_members_text(input_channel, ctx):
   channel = None
-  guild = DiscordBot().get_guild(GUILD)
+  guild = DiscordBot().get_guild(None)
   channel = DiscordBot().get_channel(guild, input_channel)
 
   if channel is None: 
@@ -135,7 +129,7 @@ async def get_photos(input_channel_name, palette_particulars, dd_begin, mm_begin
   global export_file
   is_no_images = True
   channel = None
-  guild = DiscordBot().get_guild(GUILD)
+  guild = DiscordBot().get_guild(None)
   channel = DiscordBot().get_channel(guild, input_channel_name)
   artist_name_to_num_artworks = {}
 

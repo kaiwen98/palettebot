@@ -16,7 +16,7 @@ class DiscordBot(metaclass=Singleton):
     print("asdasd", self.token)
     self.bot = discord.ext.commands.Bot(command_prefix='> ', intents=intents)
     self.approve_queue = []
-    self.guild_name = os.getenv("DISCORD_GUILD")
+    self.guild_name = os.getenv(DISCORD_GUILD)
     self.invite_links = {}
     self.extravaganza_invite_link = None
 
@@ -24,23 +24,25 @@ class DiscordBot(metaclass=Singleton):
     self.bot.run(self.token)
 
   def get_guild(self, guild_name):
+    if guild_name is None:
+      guild_name = self.get_guild(os.getenv(DISCORD_GUILD))
     filtered_guilds = \
       list(filter(
-        lambda guild: guild.name == self.guild_name,
+        lambda guild: guild.name == guild_name,
         self.bot.guilds
       ))
 
     return None if len(filtered_guilds) == 0 else filtered_guilds[0]
 
-  def get_channel(self, guild, channel_name):
+  def get_channel(self, guild_name, channel_name):
     print(channel_name)
-    if guild is None:
-      guild = self.get_guild(os.getenv(DISCORD_GUILD))
+    if guild_name is None:
+      guild_name = self.get_guild(os.getenv(DISCORD_GUILD))
 
     filtered_channels = list(filter(
       lambda channel: channel_name in channel.name,
-      guild.channels
+      guild_name.channels
     ))
 
-    return None if len(filtered_channels) == 0 else guild.get_channel(filtered_channels[0].id)
+    return None if len(filtered_channels) == 0 else guild_name.get_channel(filtered_channels[0].id)
 

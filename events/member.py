@@ -16,11 +16,7 @@ from controller.excelHandler import (
   set_up_member_info,
   update_birthday_state_to_gsheets
 )
-from config_loader import (
-  INKTOBER_APPROVE_CHANNEL,
-  INKTOBER_RECEIVE_CHANNEL,
-  GUILD
-)
+
 from utils.commons import EXTRAVAGANZA_ROLE, MEMBER_ROLE
 from utils.utils import (
   find_invite_by_code,

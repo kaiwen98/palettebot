@@ -1,8 +1,3 @@
-from config_loader import (
-  BIRTHDAY_REPORT_CHANNEL,
-  GUILD,
-  DELAY
-)
 from controller.excelHandler import set_up_member_info
 from controller.DiscordBot import DiscordBot
 import pandas as pd
@@ -43,12 +38,13 @@ from controller.excelHandler import (
   set_up_member_info, 
   set_up_palette_particulars_csv,
   update_birthday_state_to_gsheets,
-  update_birthday_state_to_local_disk,
   update_inktober_state_to_gsheets, 
   verify_is_okay_to_share_by_discord_name
 )
 from controller.commons import get_list_of_artists
 from utils.commons import (
+  BIRTHDAY_REPORT_CHANNEL,
+  DELAY,
   DIR_OUTPUT, 
   DISCORD_CHANNEL_ART_GALLERY,
   DISCORD_GUILD, 

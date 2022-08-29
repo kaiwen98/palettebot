@@ -15,20 +15,6 @@ from controller.excelHandler import (
     set_up_member_info,
     update_birthday_state_to_gsheets
 )
-from config_loader import (
-    ART_FIGHT_MODE_INKTOBER,
-    ART_FIGHT_MODE_WAIFUWARS,
-    ART_FIGHT_STATE,
-    INKTOBER_APPROVE_CHANNEL,
-    INKTOBER_RECEIVE_CHANNEL,
-    GUILD
-)
-from utils.utils import (
-    find_invite_by_code,
-    get_msg_by_jump_url,
-    get_day_from_message,
-    get_num_days_away
-)
 
 import datetime
 import os
@@ -36,6 +22,7 @@ import pandas as pd
 
 import config_loader as cfg
 from controller.DiscordBot import DiscordBot
+from utils.commons import ART_FIGHT_MODE_INKTOBER, ART_FIGHT_MODE_WAIFUWARS, ART_FIGHT_STATE
 
 
 def register_events():
@@ -43,9 +30,9 @@ def register_events():
     @bot.event
     async def on_message(message):
         print(message)
-        if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
+        if os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
             await ink.on_message(message, DiscordBot().approve_queue)
-        elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
+        elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WAIFUWARS:
             await waf.on_message_waifuwars(message, DiscordBot().approve_queue)
         elif message.channel.name == "bot-spam":
             await bot.process_commands(message)
@@ -56,5 +43,5 @@ def register_events():
         if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
             await ink.on_raw_reaction_add(payload, DiscordBot().approve_queue)
         elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
-            await waf.on_raw_reaction_add_waifuwars(payload, DiscordBot().approve_queue)
+            await waf.on_raw_reaction_add(payload, DiscordBot().approve_queue)
 

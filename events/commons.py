@@ -27,12 +27,8 @@ import controller.excelHandler as exc
 from config_loader import (
 	ART_FIGHT_MODE_INKTOBER,
 	ART_FIGHT_MODE_WAIFUWARS,
-	ART_FIGHT_STATE,
-	INKTOBER_APPROVE_CHANNEL,
-	INKTOBER_RECEIVE_CHANNEL,
-	GUILD
 )
-from utils.commons import EXTRAVAGANZA_ROLE
+from utils.commons import ART_FIGHT_STATE, EXTRAVAGANZA_ROLE
 from utils.utils import (
 	find_invite_by_code,
 	get_msg_by_jump_url,
@@ -45,7 +41,6 @@ import datetime
 import pandas as pd
 
 import config_loader as cfg
-
 import os
 
 
@@ -53,28 +48,24 @@ def register_events():
 
 	bot = DiscordBot().bot
 	@bot.event
-
 	async def on_ready():
+		guild = DiscordBot().get_guild(None)
+
+		# Getting all the guilds our bot is in
 		for guild in bot.guilds:
-			print(guild)
-			if guild.name == GUILD:
-				break
 
-			# Getting all the guilds our bot is in
-			for guild in bot.guilds:
-
-				# Adding each guild's invites to our dict
-				DiscordBot().invite_links[guild.id] = await guild.invites()
-				# print("--begin ", DiscordBot().invite_links[guild.id])
+			# Adding each guild's invites to our dict
+			DiscordBot().invite_links[guild.id] = await guild.invites()
+			# print("--begin ", DiscordBot().invite_links[guild.id])
 
 			# print(guild.roles)
 
 			print(f'{bot.user} has connected to Discord!')
 			if os.getenv("ENV") == "production":
 				bot.loop.create_task(birthday_task())
-			if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
+			if os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
 				bot.loop.create_task(ink.inktober_task())
-			elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
+			elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WAIFUWARS:
 				bot.loop.create_task(waf.waifuwars_task())
 
 
@@ -97,9 +88,9 @@ def register_events():
 			#try:
 			await get_photos(channel, palette_particulars, dd_begin, mm_begin, dd_end, mm_end, year, ctx)
 			# except Exception as e:
-				# await ctx.send(
-					# "```Error occured! Contact the administrator. Message: %s```" % (str(e))
-				# )
+			# await ctx.send(
+			# "```Error occured! Contact the administrator. Message: %s```" % (str(e))
+			# )
 
 	@bot.command(
 		name='getallmembers', 
