@@ -4,12 +4,13 @@ from config_loader import (
   get_recorded_date, 
   set_recorded_date
 )
-from models.DiscordBot import DiscordBot, Player
+from models.DiscordBot import DiscordBot
 import discord
 import pandas as pd
 import requests
 import asyncio
 from controller.excelHandler import (
+  MEMBER_INFO_COL_DISCORD, 
   get_fuzzily_discord_handle, 
   set_up_inktober, 
   update_inktober_state_to_gsheets
@@ -19,16 +20,12 @@ from utils.commons import (
   DELAY, 
   DIR_OUTPUT,
   DISCORD_GUILD,
-  GSHEET_COLUMN_DISCORD,
-  GSHEET_INKTOBER_COLUMN_STATE,
   INKTOBER_APPROVE_CHANNEL,
   INKTOBER_RECEIVE_CHANNEL,
   INKTOBER_REPORT_CHANNEL, 
   NOT_APPROVE_SIGN, 
   PATH_IMG_HAPPY, 
-  PATH_IMG_PALETTOBER_POSTER,
-  STATE_APPROVED,
-  STATE_UNDER_APPROVAL
+  PATH_IMG_PALETTOBER_POSTER
 )
 from utils.utils import (
   calculate_score, 
@@ -38,51 +35,51 @@ from utils.utils import (
   get_today_date, 
   remove_messages
 )
-
-
-DICT_DAY_TO_PROMPT = {
-  1: "Cactus",
-  2: "Pitcher Plant",
-  3: "Climbing Plant",
-  4: "Flowers",
-  5: "Seedling",
-  6: "Terrarium",
-  7: "Forest",
-  8: "Mushroom",
-  9: "Venus Flytrap",
-  10: "Rafflesia",
-  11: "Dinner",
-  12: "Void Deck",
-  13: "Coffeeshop",
-  14: "Playground",
-  15: "Working from Home",
-  16: "Ice-cream",
-  17: "Bus/Train",
-  18: "Rain",
-  19: "Park",
-  20: "Convenience Store",
-  21: "Witch",
-  22: "Skull",
-  23: "Haunted",
-  24: "Grave",
-  25: "Vampire",
-  26: "Candles",
-  27: "Bats",
-  28: "Bugs",
-  29: "Classroom",
-  30: "Dolls",
-  31: "Your Worst Fear"
+DICT_WEEK_TO_PROMPT = {
+  3: [
+    "Welcome Back", 
+    "The Return"
+  ],
+  4: [
+    "Hawker",
+    "The City",
+    "The Sea"
+  ],
+  5: [
+    "Anitan Sticker Design",
+    "Anikun Sticker Design"
+  ],
+  6: [
+    "An Anime/Manga that inspired me",
+    "The coolest character",
+    "Childhood crush"
+  ],
+  8: [
+    "Travel",
+    "Video Games",
+    "Hobbies"
+  ],
+  9: [
+    "Training",
+    "Hard at Work",
+    "The Challenge"
+  ],
+  10: [
+    "[LOCKED]"
+  ],
+  11: [
+    "[LOCKED]"
+  ],
 }
 
 async def inktober_task():
-  counter = 0
-  channel_to_send = os.getenv("INKTOBER_REPORT_CHANNEL")
+  channel_to_send = os.getenv(INKTOBER_REPORT_CHANNEL)
   # await DiscordBot().get_channel(GUILD, channel_to_send).send(
   # "**Hope you all have enjoyed Palettober! I will stop the reminder messages from here on. \nWe will have more things coming our way so stay tuned uwu**",
   # file = discord.File(PATH_IMG_HAPPY)
   # )
 
-  print("Starting Inktober Applet...")
+  print("Starting WeeklyPrompt Applet...")
   while True:
     # do something
 
@@ -135,12 +132,12 @@ async def get_scores(command = False):
     for index, row in df_inktober.iterrows():
       try:
 
-        if get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members) is None:
+        if get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members) is None:
           continue
 
-        user_score_pair = (get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members), calculate_score(row[GSHEET_INKTOBER_COLUMN_STATE]))
+        user_score_pair = (get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members), calculate_score(row[INKTOBER_STATE]))
 
-        if str(STATE_APPROVED) in list(row[GSHEET_INKTOBER_COLUMN_STATE]):
+        if str(STATE_APPROVED) in list(row[INKTOBER_STATE]):
           rank.append(user_score_pair)
 
       except Exception as e:
@@ -154,7 +151,8 @@ async def get_scores(command = False):
         get_rank_emoji(index + 1),
         _user_score_pair[0], 
         _user_score_pair[1],
-      ))
+      )
+                    )
 
     if len(rank) == 0:
       output.append("No submissions yet.. Draw something!")
@@ -177,12 +175,13 @@ async def update_inktober(user, state, date):
   for index, row in df_inktober.iterrows():
     # iterates over the sheet
     # print(row[MEMBER_INFO_COL_DISCORD])
-    if get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members, get_uid=True) is None:
+    if get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members, get_uid=True) is None:
       continue
-    
-    state_ls = list(row[GSHEET_INKTOBER_COLUMN_STATE])
+
+
+    state_ls = list(row[INKTOBER_STATE])
     state_ls[date] = str(state)
-    df_inktober.at[index, GSHEET_INKTOBER_COLUMN_STATE] = "".join(state_ls)
+    df_inktober.at[index, INKTOBER_STATE] = "".join(state_ls)
     # print("HEREEEEEEEEEEEE", _df_inktober.at[index, INKTOBER_STATE])
     update_inktober_state_to_gsheets(df_inktober)
 
@@ -209,6 +208,7 @@ async def on_message(message, approve_queue):
     # if no io/ existing in the system, make io/
     if "io" not in os.listdir(os.getcwd()):
       os.mkdir(DIR_OUTPUT)
+      print("there")
 
     if len(message.attachments) <= 0 :
       return await DiscordBot().get_channel(guild, os.getenv(INKTOBER_RECEIVE_CHANNEL)).send(
@@ -284,7 +284,6 @@ async def on_raw_reaction_add(payload, approve_queue):
   day = approve_request_to_service["day"]
   message_artwork = approve_request_to_service["message_artwork"]
   message_approval_status = approve_request_to_service["message_approval_status"]
-
 
   approve_queue.remove(approve_request_to_service)
 

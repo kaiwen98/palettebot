@@ -61,6 +61,8 @@ The project encompasses a Discord Bot which currently supports the following fea
     1. Good place to learn version control
     1. Learn about Forking Workflow
 
+1. [Google Service API Auth](https://d35mpxyw7m7k7g.cloudfront.net/bigdata_1/Get+Authentication+for+Google+Service+API+.pdf)
+
 1. Stack Overflow. Seriously.
 
 

@@ -6,23 +6,10 @@ from zipfile import ZipFile
 from config_loader import (
     ART_FIGHT_MODE_WAIFUWARS,
     ART_FIGHT_MODE_WAIFUWARS,
-    ART_FIGHT_STATE,
-    GUILD, 
-    DELAY,
-    WAIFUWARS_APPROVE_CHANNEL, 
-    WAIFUWARS_RECEIVE_CHANNEL, 
-    WAIFUWARS_REPORT_CHANNEL, 
-    WAIFUWARS_APPROVE_CHANNEL,
-    WAIFUWARS_RECEIVE_CHANNEL, 
-    WAIFUWARS_REPORT_CHANNEL, 
-    IS_HEROKU, 
-    TOKEN, 
-    call_stack,
-    call_stack_waifuwars,
-    bot,
 )
 
 import config_loader as cfg
+from models.DiscordBot import DiscordBot
 from controller.gdrive_uploader import upload_to_gdrive
 import asyncio
 import pandas as pd
@@ -46,11 +33,10 @@ from controller.excelHandler import (
     set_up_member_info, 
     set_up_palette_particulars_csv,
     update_birthday_state_to_gsheets,
-    update_birthday_state_to_local_disk,
     update_inktober_state_to_gsheets, 
     verify_is_okay_to_share_by_discord_name
 )
-from controller.get_list_of_artists import get_list_of_artists
+from controller.commons import get_list_of_artists
 from controller.inktober import DICT_DAY_TO_PROMPT
 from utils.commons import (
     APPROVE_SIGN,
@@ -64,8 +50,7 @@ from utils.utils import (
     calculate_score, 
     clear_folder,
     get_attacked_user, 
-    get_channel, 
-    get_day,
+    get_day_from_message,
     get_msg_by_jump_url, 
     get_num_days_away, 
     get_rank_emoji, 
@@ -74,24 +59,17 @@ from utils.utils import (
     remove_messages
 )
 
-
-stuff_lock = asyncio.Lock()
-call_stack_waifuwars = []
-
 async def update_waifuwars(attacked_user, attacking_user, approve_request_to_service):
-    _df_waifuwars = set_up_inktober()
-    for guild in bot.guilds:
-        print(guild)
-        if guild.name == GUILD:
-            break
+
+    guild = DiscordBot().get_guild(None)
     _df_discord_members_attacked = pd.DataFrame({
         "Discord": [user.name + "#" + str(user.discriminator) for user in [attacked_user]],
         "uid" : [user.id for user in [attacked_user]],
-        })
+    })
     _df_discord_members_attacking = pd.DataFrame({
         "Discord": [user.name + "#" + str(user.discriminator) for user in [attacking_user]],
         "uid" : [user.id for user in [attacking_user]],
-        })
+    })
 
     current_attacked_score = update_waifu_wars_by_user(_df_waifuwars, _df_discord_members_attacked, WAIFUWARS_NUMATTACKED)
     current_attack_score = update_waifu_wars_by_user(_df_waifuwars, _df_discord_members_attacking, WAIFUWARS_NUMATTACKING)
@@ -133,47 +111,106 @@ async def waifuwars_task():
         #     )
 
         while counter > 0:
-                counter = counter - 1
-                await asyncio.sleep(1)
+            counter = counter - 1
+            await asyncio.sleep(1)
+
+async def on_message_waifuwars(message, approve_queue):
+    bot = DiscordBot().bot
+    print(bot.user.mentioned_in(message))
+    global call_stack_waifuwars
+    if message.channel.name == os.getenv(WAIFUWARS_RECEIVE_CHANNEL) and \
+            bot.user.mentioned_in(message) and \
+            message.author != bot.user:
+
+        print("TEXT: ", message.content)
+
+        if "io" not in os.listdir(os.getcwd()):
+            os.mkdir(DIR_OUTPUT)
+        print("there")
+        if len(message.attachments) > 0 :
 
 
+            messages_ref_artwork = await get_attacked_user(message)
+            print(messages_ref_artwork)
 
+            for message_ref_artwork in messages_ref_artwork:
+                if message_ref_artwork.author.id == message.author.id and message.author.name != "okai_iwen":
+                    message_approve_artwork = await get_channel(bot, GUILD, os.getenv(WAIFUWARS_APPROVE_CHANNEL)).send(
+                        content = "**Silly, you can't attack yourself!**" 
+                    )
+                    return
+                response = requests.get(message_ref_artwork.attachments[0].url)
+                print(message_ref_artwork.attachments)
+                print(str(message_ref_artwork.attachments[0].url))
+                filename = "io/%s.%s" % (
+                    "tmp",
+                    str(message_ref_artwork.attachments[0].url).split(".")[-1]
+                )
 
-@bot.command(
-    name='ww_getscores', 
-    help='Get Drawtober scores'
-)
-async def get_scores_(ctx):
-    print("here")
-    await get_scores(True)
-    
+                with open(filename, "wb") as f:
+                    f.write(response.content)
+
+                message_approve_artwork = await get_channel(bot, GUILD, os.getenv(WAIFUWARS_APPROVE_CHANNEL)).send(
+                    content = "**<@%s> is attacked!** :gun: :gun: :gun: .\n:princess: :prince: Your waifu/husbando is <%s>!\n:crossed_swords: :crossed_swords: Attacker assaulted from <%s>!\n**Do you concede :flag_white: :flag_white: :flag_white:?**" % \
+                    (message_ref_artwork.author.id, message_ref_artwork.jump_url, message.jump_url),
+                    file = discord.File(os.path.join(os.getcwd(), filename)),
+                    embed = None
+                )
+
+                approve_queue.append({
+                    "type" : "waifuwars",
+                    "attacking_user": message.author, 
+                    "attacked_user" : message_ref_artwork.author,
+                    "message_approve_artwork" : message_approve_artwork,
+                    "message_artwork" : message,
+                    "message_ref_artwork" : message_ref_artwork,
+                })
+
+                await message_approve_artwork.add_reaction(WAIFUWARS_CONCEDE_SIGN)
+
+                # await get_channel(bot, GUILD, os.getenv(WAIFUWARS_RECEIVE_CHANNEL)).send(
+                #     "Received! <@%s>" % (message.author.id)
+                # )
+
+                clear_folder()
+
+        else:
+            await get_channel(bot, GUILD, os.getenv(WAIFUWARS_RECEIVE_CHANNEL)).send(
+                "You did not attach an artwork image!"
+            )
+
+    else:
+        await bot.process_commands(message)
+
 async def get_scores(command = False):
-    print("LOOK!", cfg.curr_day, get_today_date(IS_HEROKU), datetime.now())
-    if not command and (cfg.curr_day == get_today_date(IS_HEROKU)):
+    print("LOOK!", cfg.curr_day, get_today_date(), datetime.now())
+    if not command and (cfg.curr_day == get_today_date()):
         return
-    cfg.curr_day = get_today_date(IS_HEROKU)
+    cfg.curr_day = get_today_date()
     output = []
     rank = []
-    _df = set_up_inktober()
-    for guild in bot.guilds:
-        print(guild)
-        if guild.name == GUILD:
-            break
-    _df_discord_members = pd.DataFrame({
+    df_waifuwars = set_up_inktober()
+    guild = DiscordBot().get_guild(GUILD)
+    channel_to_send = DiscordBot().get_channel(
+        guild, 
+        "bot-spam" if command else os.getenv(WAIFUWARS_REPORT_CHANNEL)
+    )
+
+    df_discord_members = pd.DataFrame({
         "Discord": [i.name + "#" + str(i.discriminator) for i in guild.members],
         "uid" : [i.id for i in guild.members],
-        })
-    print(_df_discord_members)
+    })
+    print(df_discord_members)
 
     output.append("**WAIFU-HUSBANDO WAR Scores!**\n")
 
-    for index, row in _df.iterrows():
+    for index, row in df_waifuwars.iterrows():
         try:
 
-            if get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], _df_discord_members) is None:
+            if get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members) is None:
                 continue
 
-            user_score_pair = (get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], _df_discord_members), row[WAIFUWARS_NUMATTACKING], row[WAIFUWARS_NUMATTACKED],)
+            user_score_pair = (get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members), row[WAIFUWARS_NUMATTACKING], row[WAIFUWARS_NUMATTACKED],)
 
             if int(row[WAIFUWARS_NUMATTACKING]) > 0:
                 rank.append(user_score_pair)
@@ -190,123 +227,18 @@ async def get_scores(command = False):
             _user_score_pair[0], 
             _user_score_pair[1],
             _user_score_pair[2],
-            )
         )
-    
+                      )
+
     if len(rank) == 0:
         output.append("No submissions yet.. Draw something!")
 
-    channel_to_send = "bot-spam" if command else WAIFUWARS_REPORT_CHANNEL
     await get_channel(bot, GUILD, channel_to_send).send(
         "**:art: :speaker: Your friendly WAIFU HUSBANDO WAR announcement!**\n%s\n" % ("https://discord.com/channels/668080486257786880/747465326748368947/757889890653306890") + "".join(output),
         file = discord.File(os.path.join(os.getcwd(), "PALETTE_INKTOBER.jpg"))
     )
 
 
-async def on_message_waifuwars(message, approve_queue):
-    print(bot.user.mentioned_in(message))
-    global call_stack_waifuwars
-    if message.channel.name == WAIFUWARS_RECEIVE_CHANNEL and \
-        bot.user.mentioned_in(message) and \
-        message.author != bot.user:
-        
-        print("TEXT: ", message.content)
-
-        if "io" not in os.listdir(os.getcwd()):
-            os.mkdir(DIR_OUTPUT)
-        print("there")
-        if len(message.attachments) > 0 :
-            
-
-            messages_ref_artwork = await get_attacked_user(message)
-            print(messages_ref_artwork)
-            
-            for message_ref_artwork in messages_ref_artwork:
-                if message_ref_artwork.author.id == message.author.id and message.author.name != "okai_iwen":
-                    message_approve_artwork = await get_channel(bot, GUILD, WAIFUWARS_APPROVE_CHANNEL).send(
-                        content = "**Silly, you can't attack yourself!**" 
-                    )
-                    return
-                response = requests.get(message_ref_artwork.attachments[0].url)
-                print(message_ref_artwork.attachments)
-                print(str(message_ref_artwork.attachments[0].url))
-                filename = "io/%s.%s" % (
-                    "tmp",
-                    str(message_ref_artwork.attachments[0].url).split(".")[-1]
-                    )
-
-                with open(filename, "wb") as f:
-                    f.write(response.content)
-
-                message_approve_artwork = await get_channel(bot, GUILD, WAIFUWARS_APPROVE_CHANNEL).send(
-                    content = "**<@%s> is attacked!** :gun: :gun: :gun: .\n:princess: :prince: Your waifu/husbando is <%s>!\n:crossed_swords: :crossed_swords: Attacker assaulted from <%s>!\n**Do you concede :flag_white: :flag_white: :flag_white:?**" % \
-                        (message_ref_artwork.author.id, message_ref_artwork.jump_url, message.jump_url),
-                    file = discord.File(os.path.join(os.getcwd(), filename)),
-                    embed = None
-                )
-
-                approve_queue.append({
-                    "type" : "waifuwars",
-                    "attacking_user": message.author, 
-                    "attacked_user" : message_ref_artwork.author,
-                    "message_approve_artwork" : message_approve_artwork,
-                    "message_artwork" : message,
-                    "message_ref_artwork" : message_ref_artwork,
-                })
-
-                await message_approve_artwork.add_reaction(WAIFUWARS_CONCEDE_SIGN)
-
-                # await get_channel(bot, GUILD, WAIFUWARS_RECEIVE_CHANNEL).send(
-                #     "Received! <@%s>" % (message.author.id)
-                # )
-
-                clear_folder()
-
-        else:
-            await get_channel(bot, GUILD, WAIFUWARS_RECEIVE_CHANNEL).send(
-                "You did not attach an artwork image!"
-            )
-
-    else:
-        await bot.process_commands(message)
-
-@bot.event
-async def on_raw_reaction_add_waifuwars(payload, approve_queue):
-    message_approve_artwork_id = payload.message_id
-    user = payload.member
-    emoji = payload.emoji.name
-    print(emoji)
-    message_approve_artwork = await get_channel(bot, GUILD, WAIFUWARS_APPROVE_CHANNEL).fetch_message(message_approve_artwork_id)
-    # print(message.id, type(message.id), list(approve_queue.keys()))
-
-    if message_approve_artwork.id not in [i["message_approve_artwork"].id for i in approve_queue]:
-        print(1)
-        return
-
-    # specifies the channel restriction
-    if user.name not in ["okai_iwen", "tako", "Hoipus", approve_queue[-1]["attacked_user"].name]:
-        print(2)
-        return 
-
-    if message_approve_artwork.channel.name != WAIFUWARS_APPROVE_CHANNEL:
-        print(3)
-        return
-
-    approve_request_to_service = tuple(filter(lambda i: i["message_approve_artwork"].id == message_approve_artwork.id, approve_queue))[0]
-    print(approve_request_to_service)
-    attacking_user, attacked_user = approve_request_to_service["attacking_user"], approve_request_to_service["attacked_user"]
-    message_artwork = approve_request_to_service["message_artwork"]
-    approve_queue.remove(approve_request_to_service)
-
-    print(approve_queue)
-
-    if emoji == WAIFUWARS_CONCEDE_SIGN:
-        await get_channel(bot, GUILD, WAIFUWARS_APPROVE_CHANNEL).send(
-                    "**<@%s> conceded to this post!**:flag_white: :flag_white: :flag_white: \n**<@%s> won a WAIFU & HUSBANDO  WAR round! **:trophy: \n%s" % (user.id, message_artwork.author.id, message_artwork.jump_url),
-                )
-        await update_waifuwars(attacked_user, attacking_user, approve_request_to_service)
-
-    await remove_messages([message_approve_artwork])
 
 
 

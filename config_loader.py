@@ -1,58 +1,91 @@
 import os
-from dotenv import load_dotenv
+from dotenv import (
+  load_dotenv,
+  set_key,
+)
 from datetime import datetime
 import discord
 from discord.ext import commands
+import getopt, sys
+from models.DiscordBot import DiscordBot
+from utils.commons import (
+  ART_FIGHT_MODE_INKTOBER, 
+  ART_FIGHT_MODE_NOTHING,
+  ART_FIGHT_MODE_WAIFUWARS,
+  ART_FIGHT_MODE_WEEKLY_PROMPTS
+)
 
-IS_HEROKU = None
-TOKEN = None
-GUILD = None
+"""
+Global variables
+"""
 
-INKTOBER_RECEIVE_CHANNEL = None
-INKTOBER_REPORT_CHANNEL = None
-INKTOBER_APPROVE_CHANNEL = None
-WAIFUWARS_APPROVE_CHANNEL = None
-WAIFUWARS_RECEIVE_CHANNEL = None
-WAIFUWARS_REPORT_CHANNEL = None
-bot = None
-DELAY = None
-ART_FIGHT_MODE_INKTOBER = 1
-ART_FIGHT_MODE_WAIFUWARS = 0
-ART_FIGHT_MODE_NOTHING = -1
-if IS_HEROKU:
-    ART_FIGHT_STATE = ART_FIGHT_MODE_INKTOBER if datetime.now().month == 10 else ART_FIGHT_MODE_NOTHING
-else:
-    ART_FIGHT_STATE = ART_FIGHT_MODE_NOTHING
-call_stack = []
-call_stack_waifuwars = []
-curr_day = 3
+global_config_params = {
+  "GLOBAL_DATE": None,
+  "GLOBAL_DELAY": None
+}
 
-def load_config():
-    print("hi")
-    global TOKEN, GUILD, INKTOBER_APPROVE_CHANNEL, INKTOBER_RECEIVE_CHANNEL
-    global BIRTHDAY_REPORT_CHANNEL, INKTOBER_REPORT_CHANNEL, IS_HEROKU, DELAY, WAIFUWARS_APPROVE_CHANNEL, WAIFUWARS_RECEIVE_CHANNEL, WAIFUWARS_REPORT_CHANNEL
-    global bot
-    load_dotenv()
-    IS_HEROKU = "IS_HEROKU" in os.environ.keys()
-    TOKEN = os.getenv('DISCORD_TOKEN')
-    GUILD = os.getenv('DISCORD_GUILD')
+def set_config_param(key, value):
+  global global_config_params
+  global_config_params[key] = value
 
-    INKTOBER_RECEIVE_CHANNEL = "art-gallery🥰" if IS_HEROKU else "exco-chat"
-    INKTOBER_REPORT_CHANNEL = "general" if IS_HEROKU else "bot-spam"
-    INKTOBER_APPROVE_CHANNEL = "bot-spam"
+def get_config_param(key):
+  global global_config_params
+  return global_config_params[key]
 
-    WAIFUWARS_RECEIVE_CHANNEL = "art-gallery🥰" if IS_HEROKU else "exco-chat"
-    WAIFUWARS_REPORT_CHANNEL = "general" if IS_HEROKU else "exco-chat"
-    WAIFUWARS_APPROVE_CHANNEL = "art-gallery🥰" if IS_HEROKU else "exco-chat"
+def set_recorded_date(date):
+  global global_config_params
+  global_config_params["GLOBAL_DATE"] = date
 
-    BIRTHDAY_REPORT_CHANNEL = "general" if IS_HEROKU else "bot-spam"
+def get_delay():
+  global global_config_params
+  return global_config_params["GLOBAL_DELAY"]
 
-    DELAY = 300 if IS_HEROKU else 10
-    intents = discord.Intents.default()
-    intents.members = True
-    intents.messages = True
-    intents.reactions = True
-    bot = commands.Bot(command_prefix='> ', intents=intents)
-    print("done")
+def set_delay(delay):
+  global global_config_params
+  global_config_params["GLOBAL_DELAY"] = delay
 
-load_config()
+def get_recorded_date():
+  global global_config_params
+  return global_config_params["GLOBAL_DATE"]
+
+def load_config(env):
+  print("Loading config")
+  dotenv_path = os.path.join(os.path.dirname(__file__), f".env.{env}")
+  load_dotenv(dotenv_path)
+  set_key(dotenv_path, "ENV", env)
+  is_production_env = os.getenv("ENV") == 'production'
+
+  art_fight_state = ART_FIGHT_MODE_NOTHING
+
+  if is_production_env:
+    art_fight_state = ART_FIGHT_MODE_INKTOBER if datetime.now().month == 10 else ART_FIGHT_MODE_NOTHING
+  else:
+    art_fight_state = ART_FIGHT_MODE_INKTOBER
+
+    set_key(dotenv_path, "ART_FIGHT_STATE", str(art_fight_state))
+    DiscordBot()
+
+def load_env_by_command_line_args():
+  # Remove 1st argument from the
+  # list of command line arguments
+  argumentList = sys.argv[1:]
+
+  # Options
+  options = "e:"
+
+  # Long options
+  long_options = ["env="]
+
+  try:
+    # Parsing argument
+    arguments, values = getopt.getopt(argumentList, options, long_options)
+
+    # checking each argument
+    for currentArgument, currentValue in arguments:
+      if currentArgument in ("-e", "--env"):
+        load_config(currentValue)
+
+  except getopt.error as err:
+    # output error, and return with an error code
+    print (str(err))
+
