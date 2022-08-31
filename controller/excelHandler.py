@@ -23,7 +23,7 @@ from utils.utils import get_file_path
 PATH_MEMBER_INFO = "C:\\Users\\Looi Kai Wen\\OneDrive - National University of Singapore\\Post Welcome Tea Signups.xlsx"
 
 
-
+spreadsheet = None
 
 # Note: You can go to the sheets link via the following link:
 # https://docs.google.com/spreadsheets/d/{{DOCID}}
@@ -114,6 +114,11 @@ def get_player_from_gsheets():
             .replace(r'^\s*$', np.nan, regex=True) \
             .fillna('')
 
+    for column in GSHEET_PLAYER_COLUMNS:
+        sheet[column] = sheet[column] \
+            .replace(r'^\s*$', np.nan, regex=True) \
+            .fillna('')
+
     return sheet.reset_index(drop=True)
 
 def get_inktober_from_gsheets():
@@ -182,14 +187,16 @@ def update_columns_to_gsheets(input_df, doc_id, column_names, name_dict=None):
         # print(output_df)
 
         len_worksheet = output_df.shape[DF_ROW]
+
         for column in column_names:
-            output_df[column] = input_df[column]\
-                .loc[offset : offset + len_worksheet - 1].values.tolist()
+            output_df[column] = input_df[column].iloc[offset : offset + len_worksheet].values.tolist()
 
         offset += len_worksheet
 
         values = output_df.values.tolist()
+        print(values)
         worksheet.update([output_df.columns.values.tolist()] + values)
+    print("Done upload!")
 
 """
 Unspool the Dataframe and populate along the numerous worksheets in the specified spreadsheet.
@@ -216,14 +223,16 @@ def update_weeklyprompt_state_to_gsheets(df):
     )
 
 def get_spreadsheet_from_drive(docid):
-    scope = ['https://spreadsheets.google.com/feeds']
-    credentials = ServiceAccountCredentials.from_json_keyfile_name(
-        get_file_path("cred", "gsheets"), 
-        scope
-    )
-    worksheets = []
-    client = gspread.authorize(credentials)
-    spreadsheet = client.open_by_key(docid)
+    global spreadsheet
+    if spreadsheet is None:
+        scope = ['https://spreadsheets.google.com/feeds']
+        credentials = ServiceAccountCredentials.from_json_keyfile_name(
+            get_file_path("cred", "gsheets"), 
+            scope
+        )
+        worksheets = []
+        client = gspread.authorize(credentials)
+        spreadsheet = client.open_by_key(docid)
 
     return spreadsheet
 
@@ -360,6 +369,10 @@ def set_up_member_info():
     return df
 
 def set_up_inktober():
+    df = get_inktober_from_gsheets()
+    return df
+
+def set_up_waifuwars():
     df = get_inktober_from_gsheets()
     return df
 

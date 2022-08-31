@@ -4,8 +4,8 @@ Consolidates all commands that is related to Inktober.
 from models.DiscordBot import DiscordBot
 from controller import inktober as ink
 import asyncio
+from utils.commons import INKTOBER_APPROVE_CHANNEL, INKTOBER_RECEIVE_CHANNEL
 from utils.utils import (
-  get_msg_by_jump_url,
   get_day_from_message
 )
 
@@ -39,7 +39,8 @@ def register_events():
 
     # try:
 
-    msg_to_approve = await get_msg_by_jump_url(DiscordBot().bot, ctx, INKTOBER_APPROVE_CHANNEL, link.strip())   
+    msg_to_approve = await DiscordBot().get_msg_by_jump_url(DiscordBot().bot, ctx, os.getenv(INKTOBER_APPROVE_CHANNEL), link.strip())   
+
     if msg_to_approve is None:
       return
 
@@ -58,7 +59,7 @@ def register_events():
 
     link_to_msg_artwork = msg_to_approve.content.strip().split(" ")[-1]
 
-    msg_artwork = await get_msg_by_jump_url(DiscordBot().bot, ctx, INKTOBER_RECEIVE_CHANNEL, link_to_msg_artwork)
+    msg_artwork = await DiscordBot().get_msg_by_jump_url(ctx, os.getenv(INKTOBER_RECEIVE_CHANNEL), link_to_msg_artwork)
     day = get_day_from_message(msg_artwork)
 
     DiscordBot().approve_queue.append({

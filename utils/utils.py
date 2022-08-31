@@ -2,7 +2,6 @@ from datetime import datetime
 from datetime import timedelta
 import os
 
-from models.DiscordBot import DiscordBot
 from utils.commons import (
   DIR_OUTPUT, 
   DISCORD_CHANNEL_WAIFU_WARS,
@@ -48,6 +47,8 @@ def get_week_from_curr_datetime(input_datetime):
     else sem2_week_offset.isocalendar()[1]
 
 def get_today_date():
+  # Gets date with time zone accounted for/=
+  # SGT = UTC + 8hrs
   date = datetime.now() + (
     timedelta(
       hours = 8 if os.getenv(ENV) == 'production' else 0
@@ -86,7 +87,7 @@ def get_num_days_away(member_date):
 
   if num_days_away < 0: 
     num_days_away = 365 + num_days_away
-    return num_days_away
+  return num_days_away
 
 
 async def remove_messages(messages_to_delete):
@@ -113,65 +114,10 @@ def get_day_from_message(message):
   else:
     return get_today_date().day
 
-async def get_attacked_user(message):
-  output = []
-  bot = DiscordBot().bot
-  if len(message.content.strip().split(" ")) >= 2:
-    tags = message.content.strip().split(" ", 1)[1]
-    print(tags)
-    messages = await DiscordBot().get_channel(None, DISCORD_CHANNEL_WAIFU_WARS).history(
-      limit = DISCORD_MESSAGES_LIMIT,
-    ).flatten()
-    for tag in tags.strip().split(" "):
-      id = get_id_from_tag(tag)
-      tmp = await get_waifu_of_user(id, messages)
-      output.append(tmp)
-      print(output)
-    return output
-
-async def get_waifu_of_user(id, messages = None):
-  print(id)
-  bot = DiscordBot().bot
-  if messages is None:
-    messages = await DiscordBot().get_channel(None, DISCORD_CHANNEL_WAIFU_WARS).history(
-      limit = DISCORD_MESSAGES_LIMIT,
-    ).flatten()
-    for message in messages: 
-      # print(id, message.author.id, message.content)
-      if message.author.id == int(id.strip()) and len(message.attachments) > 0:
-        return message
 
 
-def get_id_from_tag(tag):
-  return tag[3:-1]
 
 
-async def get_msg_by_jump_url(bot, ctx, channel, jump_url):
-
-  guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
-  channel = DiscordBot().get_channel(guild, channel)
-
-  if channel is None: 
-    await ctx.send(
-      "Channel not recognised. Make sure you spelt it right!"
-    )
-    return None
-
-  messages = await channel.history(
-    limit = DISCORD_MESSAGES_LIMIT,
-  ).flatten()
-
-  selected_message = list(filter(
-    lambda message: message.jump_url == jump_url,
-    messages
-  ))[0]
-
-  return selected_message
-
-def find_invite_by_code(invite_list, code):
-  for inv in invite_list:
-    if inv.code == code:
-      return inv
 
 
 

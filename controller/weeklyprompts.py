@@ -10,7 +10,6 @@ import pandas as pd
 import requests
 import asyncio
 from controller.excelHandler import (
-  MEMBER_INFO_COL_DISCORD, 
   get_fuzzily_discord_handle, 
   set_up_inktober, 
   update_inktober_state_to_gsheets
@@ -35,42 +34,7 @@ from utils.utils import (
   get_today_date, 
   remove_messages
 )
-DICT_WEEK_TO_PROMPT = {
-  3: [
-    "Welcome Back", 
-    "The Return"
-  ],
-  4: [
-    "Hawker",
-    "The City",
-    "The Sea"
-  ],
-  5: [
-    "Anitan Sticker Design",
-    "Anikun Sticker Design"
-  ],
-  6: [
-    "An Anime/Manga that inspired me",
-    "The coolest character",
-    "Childhood crush"
-  ],
-  8: [
-    "Travel",
-    "Video Games",
-    "Hobbies"
-  ],
-  9: [
-    "Training",
-    "Hard at Work",
-    "The Challenge"
-  ],
-  10: [
-    "[LOCKED]"
-  ],
-  11: [
-    "[LOCKED]"
-  ],
-}
+
 
 async def inktober_task():
   channel_to_send = os.getenv(INKTOBER_REPORT_CHANNEL)
@@ -98,6 +62,7 @@ async def get_scores(command = False):
   # Ensures that the score report is only posted once a day, or when the bot restarts.
   if not command and (get_recorded_date() == get_today_date()):
     return
+
   set_recorded_date(get_today_date())
 
   output = []

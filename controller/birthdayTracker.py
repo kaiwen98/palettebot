@@ -23,15 +23,6 @@ from config_loader import load_config
 from models.DiscordBot import DiscordBot
 
 from controller.excelHandler import (
-  INKTOBER_STATE,
-  MEMBER_INFO_BIRTHDAY_STATE,
-  MEMBER_INFO_COL_BDATE,
-  MEMBER_INFO_COL_DISCORD,
-  STATE_APPROVED,
-  STATE_NO_SHOUTOUTS,
-  STATE_SHOUTOUT_DAY,
-  STATE_SHOUTOUT_WEEK,
-  STATE_UNDER_APPROVAL,
   get_fuzzily_discord_handle, 
   pretty_print_social_handle_wrapper,
   set_up_inktober,
@@ -50,9 +41,15 @@ from utils.commons import (
   DISCORD_GUILD, 
   DISCORD_MESSAGES_LIMIT,
   EXTRAVAGANZA_ROLE,
+  GSHEET_BIRTHDAY_COLUMN_STATE,
+  GSHEET_COLUMN_BIRTHDAY,
+  GSHEET_COLUMN_DISCORD,
   MEMBER_ROLE,
   PATH_IMG_BIRTHDAY,
-  PATH_IMG_BIRTHDAY_1WEEK
+  PATH_IMG_BIRTHDAY_1WEEK,
+  STATE_NO_SHOUTOUTS,
+  STATE_SHOUTOUT_DAY,
+  STATE_SHOUTOUT_WEEK
 )
 from utils.utils import (
   get_num_days_away, 
@@ -102,15 +99,17 @@ async def handle_check_birthdates_and_give_shoutout():
   channel = DiscordBot().get_channel(guild, os.getenv(BIRTHDAY_REPORT_CHANNEL))
 
   for index, row in member_info.iterrows():
-    if get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members, get_uid=True) is None:
+    if get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members, get_uid=True) is None:
       continue
 
     try:
-      if get_num_days_away(row[MEMBER_INFO_COL_BDATE].date()) == 0 and \
-          (int(row[MEMBER_INFO_BIRTHDAY_STATE]) != STATE_SHOUTOUT_DAY):
+      if get_num_days_away(row[GSHEET_COLUMN_BIRTHDAY].date()) == 0 and \
+          (int(row[GSHEET_COLUMN_BIRTHDAY]) != STATE_SHOUTOUT_DAY):
         # Birthday is today,
+        if get_num_days_away(row[GSHEET_COLUMN_DISCORD]) is None: 
+          return
 
-        if has_sent_bday_pic is False:
+        elif has_sent_bday_pic is False:
           await channel.send(
             file = discord.File(PATH_IMG_BIRTHDAY)
           )  
@@ -119,14 +118,14 @@ async def handle_check_birthdates_and_give_shoutout():
 
           await channel.send(
             "Birthday baby sighted! :mag_right: :mag_right: HAPPY BIRTHDAY <@%s> :birthday: :candle: :birthday: :candle:" % \
-            (get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members, get_uid=True)),
+            (get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members, get_uid=True)),
           )  
 
-          member_info.at[index, MEMBER_INFO_BIRTHDAY_STATE] = STATE_SHOUTOUT_DAY
+          member_info.at[index, GSHEET_BIRTHDAY_COLUMN_STATE] = STATE_SHOUTOUT_DAY
 
-        elif get_num_days_away(row[MEMBER_INFO_COL_BDATE].date()) <= 7 and \
-          get_num_days_away(row[MEMBER_INFO_COL_BDATE].date()) > 0 and \
-          (int(row[MEMBER_INFO_BIRTHDAY_STATE]) != STATE_SHOUTOUT_WEEK):
+        elif get_num_days_away(row[GSHEET_COLUMN_DISCORD].date()) <= 7 and \
+          get_num_days_away(row[GSHEET_COLUMN_DISCORD].date()) > 0 and \
+          (int(row[GSHEET_COLUMN_DISCORD]) != STATE_SHOUTOUT_WEEK):
           # Birthday is a week away,
 
           if has_sent_week_pic is False:
@@ -137,12 +136,12 @@ async def handle_check_birthdates_and_give_shoutout():
 
             await channel.send(
               "<@%s> 's birthday is less than a week away! Are yall excited :))) :eyes: :eyes: :eyes:" % \
-              (get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members, get_uid=True)),
+              (get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members, get_uid=True)),
             )  
-            member_info.at[index, MEMBER_INFO_BIRTHDAY_STATE] = STATE_SHOUTOUT_WEEK
+            member_info.at[index, GSHEET_BIRTHDAY_COLUMN_STATE] = STATE_SHOUTOUT_WEEK
 
           elif datetime.now().day == 1 and datetime.now().month == 1:
-            member_info[MEMBER_INFO_BIRTHDAY_STATE] = [STATE_NO_SHOUTOUTS for i in range(member_info.shape[0])]
+            member_info[GSHEET_BIRTHDAY_COLUMN_STATE] = [STATE_NO_SHOUTOUTS for i in range(member_info.shape[0])]
     except:
       print("Date not valid.")
 

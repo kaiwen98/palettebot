@@ -7,9 +7,6 @@ import asyncio
 from controller.birthdayTracker import birthday_task
 from controller import waifuwars as waf
 from controller.excelHandler import (
-    MEMBER_INFO_BIRTHDAY_STATE,
-    MEMBER_INFO_COL_BDATE,
-    MEMBER_INFO_COL_DISCORD,
     get_fuzzily_discord_handle,
     set_up_member_info,
     update_birthday_state_to_gsheets

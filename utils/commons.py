@@ -162,5 +162,48 @@ GSHEET_COLUMNS_MESSAGE_STATES = [
   *GSHEET_WAIFUWARS_COLUMNS_MESSAGE_STATES
 ]
 
+class Prompt():
+  def __init__(self, prompt, emoji):
+    self.prompt = prompt
+    self.emoji = emoji
+
+
+WEEKLYPROMPT_DICT_WEEK_TO_PROMPT = {
+  3: [
+    Prompt("Welcome Back", ":wave:"),
+    Prompt("The Return", ":partying_face:")
+  ],
+  4: [
+    Prompt("Hawker", ":poultry_leg:"),
+    Prompt("The City", ":cityscape:"),
+    Prompt("The Sea", ":ocean:")
+  ],
+  5: [
+    Prompt("Anitan Sticker Design", ":Anitanyes:"),
+    Prompt("Anikun Sticker Design", ":Anikunwink:")
+  ],
+  6: [
+    Prompt("An Anime/Manga that inspired me", ":star: :blue_book:"),
+    Prompt("The coolest character", ":man_juggling:"),
+    Prompt("Childhood crush", ":couple_with_heart_woman_man: :couple_ww: :couple_mm:")
+  ],
+  8: [
+    Prompt("Travel", ":luggage:"),
+    Prompt("Video Games", ":video_game:"),
+    Prompt("Hobbies", ":bowling:")
+  ],
+  9: [
+    Prompt("Training", ":runner:"),
+    Prompt("Hard at Work", ":military_helmet:"),
+    Prompt("The Challenge", ":muscle:")
+  ],
+  10: [
+    Prompt("[LOCKED]", ":lock:")
+  ],
+  11: [
+    Prompt("[LOCKED]", ":lock:")
+  ],
+}
+
 
 

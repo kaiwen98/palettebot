@@ -8,9 +8,6 @@ from controller import inktober as ink
 import discord
 import asyncio
 from controller.excelHandler import (
-  MEMBER_INFO_BIRTHDAY_STATE,
-  MEMBER_INFO_COL_BDATE,
-  MEMBER_INFO_COL_DISCORD,
   get_fuzzily_discord_handle,
   set_up_member_info,
   update_birthday_state_to_gsheets
@@ -18,8 +15,6 @@ from controller.excelHandler import (
 
 from utils.commons import EXTRAVAGANZA_ROLE, MEMBER_ROLE
 from utils.utils import (
-  find_invite_by_code,
-  get_msg_by_jump_url,
   get_day_from_message,
   get_num_days_away
 )

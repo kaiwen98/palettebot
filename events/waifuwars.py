@@ -32,9 +32,7 @@ from utils.commons import (
 from utils.utils import (
     calculate_score, 
     clear_folder,
-    get_attacked_user, 
     get_day_from_message,
-    get_msg_by_jump_url, 
     get_num_days_away, 
     get_rank_emoji, 
     get_timestamp_from_curr_datetime, 

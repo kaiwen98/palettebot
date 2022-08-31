@@ -29,15 +29,6 @@ from models.DiscordBot import DiscordBot
 
 
 from controller.excelHandler import (
-  INKTOBER_STATE,
-  MEMBER_INFO_BIRTHDAY_STATE,
-  MEMBER_INFO_COL_BDATE,
-  MEMBER_INFO_COL_DISCORD,
-  STATE_APPROVED,
-  STATE_NO_SHOUTOUTS,
-  STATE_SHOUTOUT_DAY,
-  STATE_SHOUTOUT_WEEK,
-  STATE_UNDER_APPROVAL,
   get_fuzzily_discord_handle, 
   pretty_print_social_handle_wrapper,
   set_up_inktober,

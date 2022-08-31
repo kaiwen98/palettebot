@@ -13,9 +13,6 @@ from controller.commons import (
 	get_all_members_text
 )
 from controller.excelHandler import (
-	MEMBER_INFO_BIRTHDAY_STATE,
-	MEMBER_INFO_COL_BDATE,
-	MEMBER_INFO_COL_DISCORD,
 	get_fuzzily_discord_handle,
 	set_up_member_info,
 	set_up_palette_particulars_csv,
@@ -29,8 +26,6 @@ from config_loader import (
 )
 from utils.commons import ART_FIGHT_STATE, EXTRAVAGANZA_ROLE
 from utils.utils import (
-	find_invite_by_code,
-	get_msg_by_jump_url,
 	get_day_from_message,
 	get_num_days_away,
 )
@@ -147,7 +142,7 @@ def register_events():
 
 				if DiscordBot().extravaganza_invite_link is not None:
 
-					tmp = find_invite_by_code(invites, DiscordBot().extravaganza_invite_link)
+					tmp = DiscordBot().find_invite_by_code(invites, DiscordBot().extravaganza_invite_link)
 					if tmp is not None:
 						await tmp.delete()
 
