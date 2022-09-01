@@ -29,6 +29,9 @@ spreadsheet = None
 # https://docs.google.com/spreadsheets/d/{{DOCID}}
 
 from utils.commons import (
+    DEFAULT_INKTOBER_STATE_DATA,
+    DEFAULT_MESSAGES_DATA,
+    DEFAULT_WEEKLYPROMPT_STATE_DATA,
     DF_COL,
     DF_ROW,
     DOCID_INKTOBER_TRACKER,
@@ -39,6 +42,7 @@ from utils.commons import (
     GSHEET_COLUMN_BIRTHDAY,
     GSHEET_COLUMN_DISCORD_ID,
     GSHEET_COLUMN_DISCORD,
+    GSHEET_COLUMN_NAME,
     GSHEET_COLUMNS_MESSAGE_STATES,
     GSHEET_INKTOBER_COLUMNS,
     GSHEET_INKTOBER_COLUMN_STATE,
@@ -109,13 +113,12 @@ def get_player_from_gsheets():
     # Clean data
     sheet[GSHEET_INKTOBER_COLUMN_STATE] = sheet[GSHEET_INKTOBER_COLUMN_STATE] \
         .replace(r'^\s*$', np.nan, regex=True) \
-        .fillna(("0;" * NUM_DAYS)[:-1])
-
+        .fillna(DEFAULT_INKTOBER_STATE_DATA)
 
     for column in GSHEET_COLUMNS_MESSAGE_STATES:
         sheet[column] = sheet[column] \
             .replace(r'^\s*$', np.nan, regex=True) \
-            .fillna('')
+            .fillna(DEFAULT_MESSAGES_DATA)
 
     for column in GSHEET_PLAYER_COLUMNS:
         sheet[column] = sheet[column] \
@@ -155,12 +158,12 @@ def get_weeklyprompts_from_gsheets():
     for column in [GSHEET_WEEKLYPROMPT_COLUMN_STATE]:
         sheet[column] = sheet[column] \
             .replace(r'^\s*$', np.nan, regex=True) \
-            .fillna(("0;" * NUM_WEEKS)[:-1])
+            .fillna(DEFAULT_WEEKLYPROMPT_STATE_DATA)
 
     for column in GSHEET_WEEKLYPROMPT_COLUMNS_MESSAGE_STATES:
         sheet[column] = sheet[column] \
             .replace(r'^\s*$', np.nan, regex=True) \
-            .fillna('')
+            .fillna(DEFAULT_MESSAGES_DATA)
 
     return sheet.reset_index(drop=True)
 
@@ -172,35 +175,70 @@ def update_columns_to_gsheets(input_df, doc_id, column_names, name_dict=None):
     # print(worksheets)
     # print(worksheets[0].title)
     offset = 0
-    for worksheet in worksheets:
+    output_df = {}
+    df_list = []
+    #print(input_df)
+
+    # Rearrange to have name, discord... columns on the leftmost
+    column_names = [GSHEET_COLUMN_NAME, GSHEET_COLUMN_DISCORD, GSHEET_COLUMN_BIRTHDAY] + \
+        list(filter(lambda x: x not in [GSHEET_COLUMN_NAME, GSHEET_COLUMN_DISCORD, GSHEET_COLUMN_BIRTHDAY], column_names))
+    for id, worksheet in enumerate(worksheets, start = 1):
         print("Updating worksheet: ", worksheet.title)
-        output_df = pd.DataFrame(worksheet.get_all_values())
-        if (output_df.empty):
-            continue
-        # Set column to first row, which is the header row in gsheet
-        output_df.columns = output_df.iloc[0]
-        # Remove the header row since it is not data.
-        output_df = output_df.iloc[1:,:]
-        output_df.reset_index(drop=True)
 
         input_df = correct_df_header(input_df, name_dict = name_dict)
 
+        #print(input_df.iloc[offset:])
+
+        # Last worksheet is for lost souls
+        if id == len(worksheets):
+            output_df = input_df[column_names].iloc[offset:]
+            # Remove unrecorded members under lost souls worksheet which exists in preceding worksheets.
+            # https://towardsdatascience.com/8-ways-to-filter-pandas-dataframes-d34ba585c1b8
+            if GSHEET_COLUMN_DISCORD_ID not in output_df.columns:
+                continue
+            temp_df = input_df.iloc[0 : offset]
+            print(output_df)
+            print(temp_df)
+            # print(output_df.columns)
+            # print(temp_df.columns)
+            # print(input_df.iloc[offset : ][GSHEET_COLUMN_DISCORD_ID])
+            # print(temp_df[GSHEET_COLUMN_DISCORD_ID])
+            # print(output_df[
+                # ~output_df.iloc[offset : ][GSHEET_COLUMN_DISCORD_ID].isin(
+                    # temp_df[GSHEET_COLUMN_DISCORD_ID].values.tolist()
+                # )
+            # ].columns)
+            output_df = output_df[
+                ~output_df[GSHEET_COLUMN_DISCORD_ID].isin(
+                    temp_df[GSHEET_COLUMN_DISCORD_ID].values.tolist()
+                )
+            ]
+
+            print(output_df)
+
+        else:
+            output_df = pd.DataFrame(worksheet.get_all_values())
+            if (output_df.empty):
+                continue
+            # Set column to first row, which is the header row in gsheet
+            output_df.columns = output_df.iloc[0]
+            # Remove the header row since it is not data.
+            output_df = output_df.iloc[1:,:]
+            output_df.reset_index(drop=True)
+
+            len_worksheet = output_df.shape[DF_ROW]
+
+            output_df = input_df[column_names].iloc[offset : offset + len_worksheet]
+
+            offset += len_worksheet
         print(input_df)
-
         print(output_df)
-
-        len_worksheet = output_df.shape[DF_ROW]
-
-        for column in column_names:
-            output_df[column] = input_df[column].iloc[offset : offset + len_worksheet].values.tolist()
-
-        offset += len_worksheet
-
         values = output_df.values.tolist()
         #print(values)
+        #print([output_df.columns.values.tolist()] + values)
         worksheet.update([output_df.columns.values.tolist()] + values)
     print("Done upload!")
-
+ 
 """
 Unspool the Dataframe and populate along the numerous worksheets in the specified spreadsheet.
 """
@@ -233,7 +271,6 @@ def get_spreadsheet_from_drive(docid):
             get_file_path("cred", "gsheets"), 
             scope
         )
-        worksheets = []
         client = gspread.authorize(credentials)
         spreadsheet = client.open_by_key(docid)
 
@@ -257,9 +294,14 @@ def get_sheet_df_from_drive(docid, name_dict = qn_to_colnames, column_names = No
     client = gspread.authorize(credentials)
     spreadsheet = client.open_by_key(docid)
     missing_column_names = None
+    output_df = None
+    worksheets = spreadsheet.worksheets()
+
     # Combine all sheets to one single dataframe.
-    for i, worksheet in enumerate(spreadsheet.worksheets()):
+    for id, worksheet in enumerate(worksheets, start = 1):
+
         worksheet_values = worksheet.get_all_values()
+
         if column_names is not None:
             try:
                 exist_column_names = worksheet_values[0]
@@ -267,13 +309,18 @@ def get_sheet_df_from_drive(docid, name_dict = qn_to_colnames, column_names = No
                 continue
             missing_column_names = set(column_names) - set(exist_column_names)
 
-        df = pd.DataFrame(worksheet_values)
+        df_worksheet = pd.DataFrame(worksheet_values)
+
+
         # Set column to first row, which is the header row in gsheet
-        df.columns = df.iloc[0]
+        df_worksheet.columns = df_worksheet.iloc[0]
         # Remove the header row since it is not data.
-        df = df.iloc[1:,:]
-        df = correct_df_header(df, name_dict)
-        df_list.append(df) 
+        df_worksheet = df_worksheet.iloc[1:,:]
+        df_worksheet = correct_df_header(df_worksheet, name_dict)
+
+
+
+        df_list.append(df_worksheet) 
 
     output_df = pd.concat(df_list)
 
@@ -282,7 +329,8 @@ def get_sheet_df_from_drive(docid, name_dict = qn_to_colnames, column_names = No
         output_df = output_df.assign(
             **{k: np.nan for k in missing_column_names}
         )
-
+    print(output_df)
+    print("323")
     return output_df
 
 def similar(a, b):
@@ -319,20 +367,15 @@ def get_fuzzily_discord_handle(discord_name, member_df, get_uid = False):
 
     success_flag = False
     for index, row in member_df.iterrows():
-
         # if index == 0:
         #     continue
         try:
             if re.match(r'.+\#[0-9]{4}', discord_name):
                 if similar_in_num(row["Discord"], discord_name) == 1 or similar_in_name(row["Discord"], discord_name) > 0.7:
-                    if "kiang" in discord_name:
-                        print(row)
                     success_flag = True
                     break
             else:
                 if similar_in_name(row["Discord"], discord_name) > 0.7:
-                    if "kiang" in discord_name:
-                        print(row)
                     success_flag = True
                     break
         except Exception as err:
@@ -340,7 +383,8 @@ def get_fuzzily_discord_handle(discord_name, member_df, get_uid = False):
             pass
     if not success_flag: 
         return None
-    return row["Discord"] if get_uid is False else row["uid"]
+
+    return row["Discord"] if get_uid is False else str(row["uid"])
 
 def get_social_handle_from_discord_name(df, discord_name, with_url = False):
     discord_name_from_df = get_fuzzily_discord_handle(discord_name, df)

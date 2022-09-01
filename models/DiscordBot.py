@@ -12,11 +12,16 @@ import pandas as pd
 import time
 import os
 
+import uuid
+
 from utils.commons import (
   ART_FIGHT_MODE_INKTOBER,
   ART_FIGHT_MODE_WAIFUWARS,
   ART_FIGHT_MODE_WEEKLY_PROMPTS,
   ART_FIGHT_MODES,
+  DEFAULT_INKTOBER_STATE_DATA,
+  DEFAULT_MESSAGES_DATA,
+  DEFAULT_WEEKLYPROMPT_STATE_DATA,
   DISCORD_GUILD,
   DISCORD_MESSAGES_LIMIT, 
   DISCORD_TOKEN,
@@ -25,6 +30,7 @@ from utils.commons import (
   GSHEET_COLUMN_DISCORD_ID,
   GSHEET_COLUMN_NAME,
   GSHEET_COLUMNS_MESSAGE_STATES,
+  GSHEET_INKTOBER_COLUMN_STATE,
   GSHEET_PLAYER_COLUMNS,
   GSHEET_WAIFUWARS_COLUMN_STATE_NUMATTACKED,
   GSHEET_WEEKLYPROMPT_COLUMN_STATE
@@ -62,6 +68,7 @@ class DiscordBot(metaclass=Singleton):
       "Discord": [i.name + "#" + str(i.discriminator) for i in self.guild.members],
       "uid" : [i.id for i in self.guild.members],
     })
+
     self.initialize_players_from_master_tracker()
 
   def initialize_players(self, df):
@@ -80,9 +87,47 @@ class DiscordBot(metaclass=Singleton):
 
   def initialize_players_from_master_tracker(self):
     df = get_player_from_gsheets()
+    #print(df)
     df[GSHEET_COLUMN_DISCORD_ID] = df[GSHEET_COLUMN_DISCORD].apply(lambda x: self.get_discord_handle(x) or '')
-    print(df)
+    
+    df = self.get_appended_unrecorded_members(df)
+
+    #print(df)
     self.initialize_players(df)
+
+  def get_appended_unrecorded_members(self, df):
+    print(df[GSHEET_COLUMN_DISCORD_ID])
+    # while True:
+      # pass
+    list_of_recorded_members_discord_ids = df[GSHEET_COLUMN_DISCORD_ID].values.tolist()
+    list_of_discord_members_discord_ids = self.df_discord_members["uid"].values.tolist()
+    print(list_of_recorded_members_discord_ids)
+    print(list_of_discord_members_discord_ids)
+
+    set_of_unrecorded_members_discord_ids = set(list_of_discord_members_discord_ids) - set(list_of_recorded_members_discord_ids)
+    
+    src_unrecorded_members = list(map(
+      lambda member_id: {
+        **{k: '' for k in GSHEET_PLAYER_COLUMNS},
+        # Set discord Id
+        GSHEET_COLUMN_DISCORD_ID: str(member_id),
+        # Set UUID as temp name
+        GSHEET_COLUMN_NAME: str(uuid.uuid4()),
+        # Set messages data
+        **{k: DEFAULT_MESSAGES_DATA for k in GSHEET_COLUMNS_MESSAGE_STATES},
+        # Set scores
+        GSHEET_INKTOBER_COLUMN_STATE: DEFAULT_INKTOBER_STATE_DATA,
+        GSHEET_WEEKLYPROMPT_COLUMN_STATE: DEFAULT_WEEKLYPROMPT_STATE_DATA
+      },
+      list(set_of_unrecorded_members_discord_ids)
+    ))
+
+    df_unrecorded_members = pd.DataFrame(src_unrecorded_members)
+    print(df.columns.sort_values())
+    print(df_unrecorded_members.columns.sort_values())
+
+    return pd.concat([df, df_unrecorded_members])
+
 
   def update_players_to_db(self):
     # print(
@@ -118,7 +163,7 @@ class DiscordBot(metaclass=Singleton):
       print("Gsheet updated")
 
   def get_guild(self, guild_name=None):
-    print(DISCORD_GUILD)
+    #print(DISCORD_GUILD)
     if guild_name is None:
       guild_name = os.getenv(DISCORD_GUILD)
       print(guild_name) 
