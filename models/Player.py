@@ -15,7 +15,10 @@ from utils.commons import (
   GSHEET_WEEKLYPROMPT_COLUMNS_MESSAGE_STATES,
   NUM_DAYS,
   NUM_WEEKS,
+  PAYLOAD_PARAMS,
 )
+
+import json
 
 class Player():
   def __init__(self, row_from_gspread_worksheet):
@@ -30,26 +33,33 @@ class Player():
     ]
     
     # Example message id: 1013124530690084875
-    self.message_id_lists: dict = {
-      type: set([]) for type in GSHEET_COLUMNS_MESSAGE_STATES
+    self.message_id_sets: dict = {
+      type: {} for type in GSHEET_COLUMNS_MESSAGE_STATES
     }
     
+    # Configure weekly prompt scores
     for week in range(NUM_WEEKS):
       self.set_weeklyprompt_scores_by_encoding(self.attributes[GSHEET_WEEKLYPROMPT_COLUMN_STATE], week)
+
+    for day in range(NUM_DAYS):
+      self.set_inktober_scores_by_encoding(self.attributes[GSHEET_INKTOBER_COLUMN_STATE], day)
 
     messages = {
       k: self.attributes[k] \
       if k in self.attributes.index else "" \
       for k in GSHEET_COLUMNS_MESSAGE_STATES
     }
-
-    for type in GSHEET_WEEKLYPROMPT_COLUMNS_MESSAGE_STATES:
+    
+    # Configure message states
+    for type in GSHEET_COLUMNS_MESSAGE_STATES:
       self.set_messages_id_lists_by_encoding(type, messages[type])
 
   def set_weeklyprompt_scores_by_encoding(self, encoding, week):
-    # 0000000000000
-    self.week_to_num_submitted_artworks[week] = int(encoding.split(";")[week])
-    self.day_to_submitted_artworks[week] = int(encoding.split(";")[week])
+    self.set_map_by_encoding(
+      self.week_to_num_submitted_artworks,
+      encoding, 
+      week
+    )
 
   def get_weeklyprompt_scores_to_encoding(self):
     return ';'.join(
@@ -59,9 +69,16 @@ class Player():
       )
     )
 
-  def set_inktober_scores_by_encoding(self, encoding, week):
+  def set_inktober_scores_by_encoding(self, encoding, day):
     # 0000000000000
-    self.day_to_submitted_artworks[week] = int(encoding.split(";")[week])
+    self.set_map_by_encoding(
+      self.day_to_submitted_artworks,
+      encoding, 
+      day
+    )
+
+  def set_map_by_encoding(self, map, encoding, index):
+    map[index] = int(encoding.split(";")[index])
 
   def get_inktober_scores_to_encoding(self):
     return ';'.join(
@@ -81,17 +98,25 @@ class Player():
     self.week_to_num_submitted_artworks[week - 1] += increment
 
   def get_messages_id_lists_to_encoding(self):
-    return {k: ";".join(self.message_id_lists[k])[1:] for k in GSHEET_INKTOBER_COLUMNS_MESSAGE_STATES}
+    return {k: json.dumps(self.message_id_sets[k]) for k in GSHEET_COLUMNS_MESSAGE_STATES}
 
   def set_messages_id_lists_by_encoding(self, message_id_type, encoding):
-    self.message_id_lists[message_id_type] = set(filter(lambda x: x != '', encoding.split(";")))
-    pass
+    payload = json.loads(encoding) if len(encoding) else {}
+    self.message_id_sets[message_id_type] = payload
 
-  def append_message_id_to_list_by_type(self, message_id, message_id_type):
-    self.message_id_lists[message_id_type].add(str(message_id))
+  def add_message_id_to_set_by_type(self, message_id, message_id_type, payload={}):
+    print(message_id_type)
+    print(message_id)
+    print(payload)
+    self.message_id_sets[message_id_type][message_id] = payload
 
-  def remove_message_id_to_list_by_type(self, message_id, message_id_type):
-    self.message_id_lists[message_id_type].remove(str(message_id))
+  def pop_message_id_from_set_by_type(self, message_id, message_id_type):
+    payload = self.message_id_sets[message_id_type].pop(message_id)
+    return message_id, payload
+
+  def move_message_id_across_types(self, message_id, src_message_id_type, dest_message_id_type):
+    temp = self.pop_message_id_from_set_by_type(message_id, src_message_id_type)
+    self.add_message_id_to_set_by_type(temp[0], dest_message_id_type, temp[1])
 
   def set_birthday_from_encoding(self, birthday):
     pass
@@ -101,7 +126,6 @@ class Player():
     
     # Update messages
     encoded_message_id_lists = self.get_messages_id_lists_to_encoding()
-
     output_df_row = {
       **output_df_row,
       **encoded_message_id_lists

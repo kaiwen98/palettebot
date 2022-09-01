@@ -62,8 +62,11 @@ def load_config(env):
   else:
     art_fight_state = ART_FIGHT_MODE_INKTOBER
 
-    set_key(dotenv_path, "ART_FIGHT_STATE", str(art_fight_state))
-    DiscordBot()
+  set_key(dotenv_path, "ART_FIGHT_STATE", str(art_fight_state))
+
+  # print(os.environ)
+
+  DiscordBot()
 
 def load_env_by_command_line_args():
   # Remove 1st argument from the

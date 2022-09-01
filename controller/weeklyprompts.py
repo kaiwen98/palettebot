@@ -16,22 +16,35 @@ from controller.excelHandler import (
 )
 from utils.commons import (
   APPROVE_SIGN,
+  ART_FIGHT_MODE_INKTOBER,
+  ART_FIGHT_MODE_WEEKLY_PROMPTS,
   DELAY, 
   DIR_OUTPUT,
   DISCORD_GUILD,
+  GSHEET_COLUMN_DISCORD,
+  GSHEET_WEEKLYPROMPT_COLUMN_PENDING_APPROVAL,
+  GSHEET_WEEKLYPROMPT_COLUMN_STATE,
   INKTOBER_APPROVE_CHANNEL,
   INKTOBER_RECEIVE_CHANNEL,
   INKTOBER_REPORT_CHANNEL, 
   NOT_APPROVE_SIGN, 
   PATH_IMG_HAPPY, 
-  PATH_IMG_PALETTOBER_POSTER
+  PATH_IMG_PALETTOBER_POSTER,
+  PAYLOAD_PARAM_MESSAGE_TO_APPROVE_ARTWORK,
+  PAYLOAD_PARAM_MESSAGE_TO_APPROVE_ARTWORK_STATUS,
+  PAYLOAD_PARAM_MESSAGE_TO_SUBMITTED_ARTWORK,
+  WEEKLYPROMPT_DICT_WEEK_TO_PROMPT,
+  WEEKLYPROMPTS_APPROVE_CHANNEL,
+  WEEKLYPROMPTS_RECEIVE_CHANNEL
 )
 from utils.utils import (
   calculate_score, 
   clear_folder, 
   get_day_from_message, 
   get_rank_emoji, 
-  get_today_date, 
+  get_today_date,
+  get_today_week,
+  get_week_from_datetime, 
   remove_messages
 )
 
@@ -82,31 +95,31 @@ async def get_scores(command = False):
 
   print(df_discord_members)
 
-  if get_today_date().day < 11: 
-    prompt_type = ":potted_plant:"
-  elif get_today_date().day < 21:
-    prompt_type = ":house:"
-  else:
-    prompt_type = ":ghost:"
+  today_week = get_today_week()
+  prompts = WEEKLYPROMPT_DICT_WEEK_TO_PROMPT[today_week]
+  output.append(
+    "Good Morning! This week's Palette WeeklyPrompt prompt is ... ")
+  
+  for (id, prompt) in enumerate(prompts, start=1):
     output.append(
-      "Good Morning! Today's Palette Drawtober prompt is ... %s **%s**!\n\n" % (prompt_type, DICT_DAY_TO_PROMPT[get_today_date().day])
+      "\n%s **%s**" % (prompt.emoji, prompt.prompt)
     )
 
-    output.append("**Drawtober Scores!**\n")
+  output.append("\n**Weekly Prompt Scores!**\n")
 
-    for index, row in df_inktober.iterrows():
-      try:
+  for index, row in df_inktober.iterrows():
+    try:
 
-        if get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members) is None:
-          continue
-
-        user_score_pair = (get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members), calculate_score(row[INKTOBER_STATE]))
-
-        if str(STATE_APPROVED) in list(row[INKTOBER_STATE]):
-          rank.append(user_score_pair)
-
-      except Exception as e:
+      if get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members) is None:
         continue
+
+      user_score_pair = (get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members), calculate_score(row[GSHEET_WEEKLYPROMPT_COLUMN_STATE]))
+
+      if str(STATE_APPROVED) in list(row[GSHEET_WEEKLYPROMPT_COLUMN_STATE]):
+        rank.append(user_score_pair)
+
+    except Exception as e:
+      continue
 
     rank.sort(key = lambda tup: tup[1], reverse = True)
 
@@ -139,15 +152,15 @@ async def update_inktober(user, state, date):
 
   for index, row in df_inktober.iterrows():
     # iterates over the sheet
-    # print(row[MEMBER_INFO_COL_DISCORD])
-    if get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members, get_uid=True) is None:
+    # print(row[GSHEET_COLUMN_DISCORD])
+    if get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members, get_uid=True) is None:
       continue
 
 
-    state_ls = list(row[INKTOBER_STATE])
+    state_ls = list(row[GSHEET_WEEKLYPROMPT_COLUMN_STATE])
     state_ls[date] = str(state)
-    df_inktober.at[index, INKTOBER_STATE] = "".join(state_ls)
-    # print("HEREEEEEEEEEEEE", _df_inktober.at[index, INKTOBER_STATE])
+    df_inktober.at[index, GSHEET_WEEKLYPROMPT_COLUMN_STATE] = "".join(state_ls)
+    # print("HEREEEEEEEEEEEE", _df_inktober.at[index, GSHEET_WEEKLYPROMPT_COLUMN_STATE])
     update_inktober_state_to_gsheets(df_inktober)
 
 """
@@ -168,12 +181,13 @@ async def on_message(message, approve_queue):
   ):
 
     print("TEXT: ", message.content)
-    day_to_approve = get_day_from_message(message)
+    week_to_approve = get_day_from_message(message)
+    prompt_id = 0
+    prompt = WEEKLYPROMPT_DICT_WEEK_TO_PROMPT[week_to_approve][prompt_id]
 
     # if no io/ existing in the system, make io/
     if "io" not in os.listdir(os.getcwd()):
       os.mkdir(DIR_OUTPUT)
-      print("there")
 
     if len(message.attachments) <= 0 :
       return await DiscordBot().get_channel(guild, os.getenv(INKTOBER_RECEIVE_CHANNEL)).send(
@@ -193,24 +207,37 @@ async def on_message(message, approve_queue):
 
       # Send approval message
       message_approve_artwork = await DiscordBot().get_channel(guild, os.getenv(INKTOBER_APPROVE_CHANNEL)).send(
-        "Theme: %s. \nApprove this post? %s" % (DICT_DAY_TO_PROMPT[day_to_approve], message.jump_url),
+        "Theme: %s **%s**. \nApprove this post? %s" % (prompt.emoji, prompt.prompt, message.jump_url),
         file = discord.File(os.path.join(os.getcwd(), filename))
       )
 
       message_approval_status = await DiscordBot().get_channel(guild, os.getenv(INKTOBER_RECEIVE_CHANNEL)).send(
-        "Received Inktober Submission! <@%s>" % (message.author.id)
+        "Received Weekly Prompt Submission! <@%s>" % (message.author.id)
       )
 
-      await update_inktober(message.author, STATE_UNDER_APPROVAL, day_to_approve - 1)
+      payload = {
+          "week" : week_to_approve, 
+          PAYLOAD_PARAM_MESSAGE_TO_SUBMITTED_ARTWORK : message, 
+          PAYLOAD_PARAM_MESSAGE_TO_APPROVE_ARTWORK : message_approve_artwork,
+          PAYLOAD_PARAM_MESSAGE_TO_APPROVE_ARTWORK_STATUS : message_approval_status
+        }
 
-      approve_queue.append({
-        "type" : "inktober",
-        "day" : day_to_approve, 
-        "message_artwork" : message, 
-        "message_approve_artwork" : message_approve_artwork,
-        "message_approval_status" : message_approval_status
-      })
+      payload_to_store = {
+          "week" : week_to_approve, 
+          PAYLOAD_PARAM_MESSAGE_TO_SUBMITTED_ARTWORK : message.id, 
+          PAYLOAD_PARAM_MESSAGE_TO_APPROVE_ARTWORK : message_approve_artwork.id,
+          PAYLOAD_PARAM_MESSAGE_TO_APPROVE_ARTWORK_STATUS : message_approval_status.id
+      }
 
+
+      DiscordBot().players[message.author.name].add_message_id_to_set_by_type(
+        message_approve_artwork.id, 
+        GSHEET_WEEKLYPROMPT_COLUMN_PENDING_APPROVAL,
+        payload_to_store
+      )
+
+      DiscordBot().approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS][message] = payload
+      
       await message_approve_artwork.add_reaction(APPROVE_SIGN)
       await message_approve_artwork.add_reaction(NOT_APPROVE_SIGN)
 
@@ -221,9 +248,9 @@ async def on_message(message, approve_queue):
     await DiscordBot().bot.process_commands(message)
 
 # In the event the admins add a reaction to approve/disapprove
-async def on_raw_reaction_add(payload, approve_queue):
+async def on_raw_reaction_add(payload):
   message_approve_artwork_id = payload.message_id
-  user = payload.member
+  approver = payload.member
   emoji = payload.emoji.name
   print(emoji)
 
@@ -233,45 +260,57 @@ async def on_raw_reaction_add(payload, approve_queue):
   # print(message.id, type(message.id), list(approve_queue.keys()))
 
   # If approved artwork not in queue, return
-  if message_approve_artwork.id not in [i["message_approve_artwork"].id for i in approve_queue]:
+  # if message_approve_artwork.id not in [approve_request["message_approve_artwork"] for approve_request in approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS]]:
+  if message_approve_artwork_id not in DiscordBot().approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS].keys():
     return
 
   # Ensure approver is of correct access rights
-  if len(list(filter(lambda role: role.name in ["Senpai"], user.roles))) == 0:
+  if len(list(filter(lambda role: role.name in ["Senpai"], approver.roles))) == 0:
     return 
 
   # If not on approve channel
-  if message_approve_artwork.channel.name != os.getenv(INKTOBER_APPROVE_CHANNEL):
+  if message_approve_artwork.channel.name != os.getenv(WEEKLYPROMPTS_APPROVE_CHANNEL):
     return
 
-  approve_request_to_service = tuple(filter(lambda i: i["message_approve_artwork"].id == message_approve_artwork.id, approve_queue))[0]
+  approve_request_to_service = DiscordBot().approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS][message_approve_artwork_id]
 
-  day = approve_request_to_service["day"]
-  message_artwork = approve_request_to_service["message_artwork"]
-  message_approval_status = approve_request_to_service["message_approval_status"]
+  week = approve_request_to_service["week"]
 
-  approve_queue.remove(approve_request_to_service)
+  message_artwork = await DiscordBot().get_message_by_id(
+    os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL), 
+    approve_request_to_service[PAYLOAD_PARAM_MESSAGE_TO_SUBMITTED_ARTWORK]
+  )
 
-  print(approve_queue)
+  message_approval_status = await DiscordBot().get_message_by_id(
+    os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL), 
+    approve_request_to_service[PAYLOAD_PARAM_MESSAGE_TO_APPROVE_ARTWORK_STATUS]
+  )
+
+  artist_name = message_artwork.author.name
+
+  DiscordBot().approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS].pop(message_approve_artwork_id)
+
+  print(DiscordBot().approve_queue)
 
   if emoji == APPROVE_SIGN:
     await DiscordBot().get_channel(guild, os.getenv(INKTOBER_APPROVE_CHANNEL)).send(
-      "> <@%s> approved this post: %s" % (user.id, message_artwork.jump_url)
+      "> <@%s> approved this post: %s" % (approver.id, message_artwork.jump_url)
     )
 
-    await update_inktober(message_artwork.author, STATE_APPROVED, day - 1)
+    DiscordBot().players[artist_name].increment_weeklyprompt_score_at_week(week, 1)
+
     # Add tick to source artwork
     await message_artwork.add_reaction(APPROVE_SIGN)
     # Update status message
-    await message_approval_status.edit(content="> <@%s> approved your artwork post: %s" % (user.id, message_artwork.jump_url))
+    await message_approval_status.edit(content="> <@%s> approved your artwork post: %s" % (approver.id, message_artwork.jump_url))
     await remove_messages([message_approve_artwork])
 
   elif emoji == NOT_APPROVE_SIGN:
     await DiscordBot().get_channel(guild, os.getenv(INKTOBER_APPROVE_CHANNEL)).send(
-      "> <@%s> rejected this post: %s" % (user.id, message_artwork.jump_url)
+      "> <@%s> rejected this post: %s" % (approver.id, message_artwork.jump_url)
     )
     await DiscordBot().get_channel(guild, os.getenv(INKTOBER_RECEIVE_CHANNEL)).send(
       "> <@%s> Due to some reasons, your post is not accepted! Sorry... %s" % (message_artwork.author.id, message_artwork.jump_url),
     )
-    await message_artwork.add_reaction(APPROVE_SIGN)
+    await message_artwork.add_reaction(NOT_APPROVE_SIGN)
     await remove_messages([message_approve_artwork])

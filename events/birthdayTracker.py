@@ -10,7 +10,7 @@ from controller.excelHandler import (
   set_up_member_info,
   update_birthday_state_to_gsheets
 )
-from utils.commons import DISCORD_GUILD
+from utils.commons import DISCORD_GUILD, GSHEET_COLUMN_BIRTHDAY, GSHEET_COLUMN_DISCORD
 
 from utils.utils import (
   get_day_from_message,
@@ -54,17 +54,17 @@ def register_events():
     for index, row in member_info.iterrows():
       try:
 
-        if get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members) is None:
+        if get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members) is None:
           continue
 
-        if row[MEMBER_INFO_COL_BDATE].date().month == (datetime.datetime.now() + datetime.timedelta(hours = 8)).date().month:
+        if row[GSHEET_COLUMN_BIRTHDAY].date().month == (datetime.datetime.now() + datetime.timedelta(hours = 8)).date().month:
           output.append("%s | %s | %s\n " % (
             # Discord name
-            get_fuzzily_discord_handle(row[MEMBER_INFO_COL_DISCORD], df_discord_members), 
+            get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members), 
             # Month and date
-            datetime.datetime.strftime(row[MEMBER_INFO_COL_BDATE], "%m-%d"),
+            datetime.datetime.strftime(row[GSHEET_COLUMN_BIRTHDAY], "%m-%d"),
             # Number of days away
-            get_num_days_away(row[MEMBER_INFO_COL_BDATE].date())
+            get_num_days_away(row[GSHEET_COLUMN_BIRTHDAY].date())
           ))
 
       except Exception as e:

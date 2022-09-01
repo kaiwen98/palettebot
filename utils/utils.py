@@ -38,7 +38,7 @@ def get_timestamp_from_curr_datetime():
   output = datetime.now().strftime("%m%d%Y_%H%M%S")
   return output.strip()
 
-def get_week_from_curr_datetime(input_datetime):
+def get_week_from_datetime(input_datetime):
   sem1_week_offset = datetime(datetime.today().year, 8, 9)
   sem2_week_offset = datetime(datetime.today().year, 1, 9)
   return input_datetime.isocalendar()[1] + 1 - \
@@ -55,6 +55,9 @@ def get_today_date():
     )   
   )
   return date.date()
+
+def get_today_week():
+  return get_week_from_datetime(get_today_date())
 
 def get_num_days_away(member_date):
   dummy_member_date = datetime(
@@ -108,11 +111,13 @@ def get_rank_emoji(rank):
   else:
     return ":paintbrush:"
 
-def get_day_from_message(message):
-  if len(message.content.strip().split(" ")) == 2:
-    return int(message.content.strip().split(" ")[1])
-  else:
-    return get_today_date().day
+def get_day_from_message(message, custom_input=True):
+  # If a date is supplied
+  if custom_input:
+    if len(message.content.strip().split(" ")) == 2:
+      return int(message.content.strip().split(" ")[1])
+
+  return get_today_date().day
 
 
 

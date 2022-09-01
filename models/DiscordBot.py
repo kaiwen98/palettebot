@@ -1,5 +1,6 @@
 from numpy import empty
 from controller.excelHandler import (
+  get_fuzzily_discord_handle,
   get_player_from_gsheets, 
   update_columns_to_gsheets
 )
@@ -12,12 +13,21 @@ import time
 import os
 
 from utils.commons import (
+  ART_FIGHT_MODE_INKTOBER,
+  ART_FIGHT_MODE_WAIFUWARS,
+  ART_FIGHT_MODE_WEEKLY_PROMPTS,
+  ART_FIGHT_MODES,
   DISCORD_GUILD,
   DISCORD_MESSAGES_LIMIT, 
   DISCORD_TOKEN,
   DOCID_MASTER_TRACKER,
+  GSHEET_COLUMN_DISCORD,
+  GSHEET_COLUMN_DISCORD_ID,
   GSHEET_COLUMN_NAME,
-  GSHEET_PLAYER_COLUMNS
+  GSHEET_COLUMNS_MESSAGE_STATES,
+  GSHEET_PLAYER_COLUMNS,
+  GSHEET_WAIFUWARS_COLUMN_STATE_NUMATTACKED,
+  GSHEET_WEEKLYPROMPT_COLUMN_STATE
 )
 
 class DiscordBot(metaclass=Singleton):
@@ -28,29 +38,58 @@ class DiscordBot(metaclass=Singleton):
     intents.reactions = True
     self.token = os.getenv(DISCORD_TOKEN)
     self.bot = discord.ext.commands.Bot(command_prefix='> ', intents=intents)
-    self.approve_queue = []
+    self.approve_queue = {
+      k: {} for k in ART_FIGHT_MODES
+    }
     self.guild_name = os.getenv(DISCORD_GUILD)
     self.invite_links = {}
     self.extravaganza_invite_link = None
-    self.players = {}
+    self.players: dict[str, Player] = {}
     self.update_delay = 10
+
+  def get_player_by_id(self, id):
+    filtered_players = {k: v for k, v in self.players if v.attributes(GSHEET_COLUMN_DISCORD_ID) == id}
+    return list(filtered_players.items())[0][1]
 
   def run(self):
     self.bot.run(self.token)
+
+  def set_up_after_run(self):
+    print("Generating map of members and uid...")
+
+    self.guild = self.get_guild()
+    self.df_discord_members = pd.DataFrame({
+      "Discord": [i.name + "#" + str(i.discriminator) for i in self.guild.members],
+      "uid" : [i.id for i in self.guild.members],
+    })
+    self.initialize_players_from_master_tracker()
 
   def initialize_players(self, df):
     for index, row in df.iterrows():
       key = row[GSHEET_COLUMN_NAME]
       if key in self.players.keys():
-        print(key)
+        print("DUPLICATE KEY ERROR ", key)
       self.players[key] = Player(row)
 
+    # for player in self.players.values():
+      # self.approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS].update(player.message_id_sets[GSHEET_WEEKLYPROMPT_COLUMN_STATE])
+      # self.approve_queue[ART_FIGHT_MODE_INKTOBER].update(player.message_id_sets[GSHEET_WEEKLYPROMPT_COLUMN_STATE])
+      # self.approve_queue[ART_FIGHT_MODE_WAIFUWARS].update(player.message_id_sets[GSHEET_WAIFUWARS_COLUMN_STATE_NUMATTACKED])
+
+    # self.approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS] = 
+
+  def initialize_players_from_master_tracker(self):
+    df = get_player_from_gsheets()
+    df[GSHEET_COLUMN_DISCORD_ID] = df[GSHEET_COLUMN_DISCORD].apply(lambda x: self.get_discord_handle(x) or '')
+    print(df)
+    self.initialize_players(df)
+
   def update_players_to_db(self):
-    print(
-      pd.DataFrame(
-        {k: [v] for k, v in self.players['Duanmu Chuanyun'].export_to_df_row().items()}
-      )
-    )
+    # print(
+      # pd.DataFrame(
+        # {k: [v] for k, v in self.players['Duanmu Chuanyun'].export_to_df_row().items()}
+      # )
+    # )
     dataframes = list(map(
       lambda player: pd.DataFrame(
         {k: [v] for k, v in player.export_to_df_row().items()}
@@ -60,7 +99,7 @@ class DiscordBot(metaclass=Singleton):
 
     output_df = pd.concat(dataframes, axis=0)
 
-    print(output_df)
+    # print(output_df)
 
     update_columns_to_gsheets(
       input_df=output_df,
@@ -78,9 +117,12 @@ class DiscordBot(metaclass=Singleton):
       time.sleep(self.update_delay)
       print("Gsheet updated")
 
-  def get_guild(self, guild_name):
+  def get_guild(self, guild_name=None):
+    print(DISCORD_GUILD)
     if guild_name is None:
-      guild_name = self.get_guild(os.getenv(DISCORD_GUILD))
+      guild_name = os.getenv(DISCORD_GUILD)
+      print(guild_name) 
+
     filtered_guilds = \
       list(filter(
         lambda guild: guild.name == guild_name,
@@ -90,7 +132,7 @@ class DiscordBot(metaclass=Singleton):
     return None if len(filtered_guilds) == 0 else filtered_guilds[0]
 
   def get_channel(self, guild, channel_name):
-    print(channel_name)
+    # print(channel_name)
     if guild is None:
       guild = self.get_guild(os.getenv(DISCORD_GUILD))
 
@@ -107,7 +149,7 @@ class DiscordBot(metaclass=Singleton):
 
   async def get_msg_by_jump_url(self, ctx, channel, jump_url):
 
-    guild = self.get_guild(os.getenv(DISCORD_GUILD))
+    guild = self.get_guild()
     channel = self.get_channel(guild, channel)
 
     if channel is None: 
@@ -132,3 +174,12 @@ class DiscordBot(metaclass=Singleton):
       if inv.code == code:
         return inv
 
+  async def get_message_by_id(self, channel, id):
+    return await channel.fetch_message(id)
+
+  def get_discord_handle(self, discord_name, get_uid=True):
+
+    df = self.df_discord_members
+    # print(df)
+    # print(discord_name)
+    return get_fuzzily_discord_handle(discord_name, df, get_uid)

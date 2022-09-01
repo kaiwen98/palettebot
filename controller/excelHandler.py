@@ -37,6 +37,8 @@ from utils.commons import (
     DOCID_BIRTHDAY_TRACKER,
     GSHEET_BIRTHDAY_COLUMNS,
     GSHEET_COLUMN_BIRTHDAY,
+    GSHEET_COLUMN_DISCORD_ID,
+    GSHEET_COLUMN_DISCORD,
     GSHEET_COLUMNS_MESSAGE_STATES,
     GSHEET_INKTOBER_COLUMNS,
     GSHEET_INKTOBER_COLUMN_STATE,
@@ -108,6 +110,7 @@ def get_player_from_gsheets():
     sheet[GSHEET_INKTOBER_COLUMN_STATE] = sheet[GSHEET_INKTOBER_COLUMN_STATE] \
         .replace(r'^\s*$', np.nan, regex=True) \
         .fillna(("0;" * NUM_DAYS)[:-1])
+
 
     for column in GSHEET_COLUMNS_MESSAGE_STATES:
         sheet[column] = sheet[column] \
@@ -182,9 +185,9 @@ def update_columns_to_gsheets(input_df, doc_id, column_names, name_dict=None):
 
         input_df = correct_df_header(input_df, name_dict = name_dict)
 
-        # print(input_df)
+        print(input_df)
 
-        # print(output_df)
+        print(output_df)
 
         len_worksheet = output_df.shape[DF_ROW]
 
@@ -194,7 +197,7 @@ def update_columns_to_gsheets(input_df, doc_id, column_names, name_dict=None):
         offset += len_worksheet
 
         values = output_df.values.tolist()
-        print(values)
+        #print(values)
         worksheet.update([output_df.columns.values.tolist()] + values)
     print("Done upload!")
 
@@ -309,25 +312,31 @@ def verify_is_okay_to_share_by_discord_name(discord_name, df):
     print(_df, _df["ArtPostOk"])
     return True if _df["ArtPostOk"].values[0] == "I agree" else False
 
-def get_fuzzily_discord_handle(discord_name, df, get_uid = False):
+def get_fuzzily_discord_handle(discord_name, member_df, get_uid = False):
     """
     Handles parsing of user-input Discord names and returns the name part
     """
+
     success_flag = False
-    for index, row in df.iterrows():
-        # print(row)
+    for index, row in member_df.iterrows():
+
         # if index == 0:
         #     continue
         try:
-            if re.match(r'[.]+\#[0-9]{4}', discord_name):
-                if similar_in_num(row["Discord"], discord_name) == 1:
+            if re.match(r'.+\#[0-9]{4}', discord_name):
+                if similar_in_num(row["Discord"], discord_name) == 1 or similar_in_name(row["Discord"], discord_name) > 0.7:
+                    if "kiang" in discord_name:
+                        print(row)
                     success_flag = True
                     break
             else:
-                if similar_in_name(row["Discord"], discord_name) > 0.9:
+                if similar_in_name(row["Discord"], discord_name) > 0.7:
+                    if "kiang" in discord_name:
+                        print(row)
                     success_flag = True
                     break
-        except:
+        except Exception as err:
+            print(err)
             pass
     if not success_flag: 
         return None
