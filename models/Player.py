@@ -36,10 +36,12 @@ class Player():
     self.message_id_sets: dict = {
       type: {} for type in GSHEET_COLUMNS_MESSAGE_STATES
     }
-    
+    print(self.attributes[GSHEET_WEEKLYPROMPT_COLUMN_STATE]) 
     # Configure weekly prompt scores
     for week in range(NUM_WEEKS):
-      self.set_weeklyprompt_scores_by_encoding(self.attributes[GSHEET_WEEKLYPROMPT_COLUMN_STATE], week)
+      self.set_weeklyprompt_scores_by_encoding(
+        self.attributes[GSHEET_WEEKLYPROMPT_COLUMN_STATE], 
+        week)
 
     for day in range(NUM_DAYS):
       self.set_inktober_scores_by_encoding(self.attributes[GSHEET_INKTOBER_COLUMN_STATE], day)

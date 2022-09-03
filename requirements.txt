@@ -40,3 +40,5 @@ typing-extensions==3.10.0.2
 uritemplate==3.0.1
 urllib3==1.26.6
 yarl==1.6.3
+pystache==0.6.0
+
