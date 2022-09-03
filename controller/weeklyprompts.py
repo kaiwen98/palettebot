@@ -1,24 +1,25 @@
 from datetime import datetime
 import pystache
 import os
-from config_loader import (
-  get_recorded_date, 
-  set_recorded_date
-)
+from config_loader import get_recorded_week
+
 from models.DiscordBot import DiscordBot
 import discord
 import pandas as pd
 import requests
 import asyncio
+import re
 
 from controller.excelHandler import (
   get_fuzzily_discord_handle, 
   set_up_inktober, 
   update_inktober_state_to_gsheets
 )
+from utils.config_utils import is_done_this_day, is_done_this_week
 from utils.constants import (
   APPROVE_SIGN,
   ART_FIGHT_MODE_WEEKLY_PROMPTS,
+  BOT_DISCORD_ID_WEIRD,
   DELAY, 
   DIR_OUTPUT,
   DISCORD_GUILD,
@@ -40,15 +41,16 @@ from utils.constants import (
   WEEKLYPROMPTS_RECEIVE_CHANNEL,
   WEEKLYPROMPTS_UPLOAD_LIMIT
 )
-from utils.messages import MESSAGE_APPROVE_ARTWORK, MESSAGE_WEEKLYPROMPT_SCORE_MESSAGE
+from utils.messages import MESSAGE_APPROVE_ARTWORK, MESSAGE_WEEKLYPROMPT_SCORE_MESSAGE, MESSAGE_WEEKLYPROMPT_WEEK_MESSAGE, MESSAGE_WEEKLYPROMPT_WRONG_REQUEST_INPUT, MESSAGE_WEEKLYPROMPT_WRONG_WEEK
 from utils.utils import (
   calculate_score, 
   clear_folder, 
-  get_day_from_message, 
+  get_day_from_message,
+  get_processed_input_message, 
   get_rank_emoji, 
   get_today_date,
   get_today_week,
-  get_week_from_datetime, 
+  get_week_from_datetime,
   remove_messages
 )
 
@@ -60,7 +62,7 @@ async def task():
   # file = discord.File(PATH_IMG_HAPPY)
   # )
 
-  print("Starting WeeklyPrompt Applet...")
+  print("[INFO] Starting WeeklyPrompt Applet...")
   while True:
     # do something
 
@@ -73,30 +75,49 @@ async def task():
     delay: int = int(os.getenv(DELAY))
     await asyncio.sleep(delay)
 
-async def get_scores(command = False):
+async def get_scores(is_command = False):
 
   # Ensures that the score report is only posted once a day, or when the bot restarts.
-  if not command and (get_recorded_date() == get_today_date()):
+  if is_command or is_done_this_day():
     return
 
-  set_recorded_date(get_today_date())
 
   guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
-  print("report getscores", os.getenv(WEEKLYPROMPTS_REPORT_CHANNEL))
+  #print("report getscores", os.getenv(WEEKLYPROMPTS_REPORT_CHANNEL))
   channel_to_send = DiscordBot().get_channel(
     guild, 
-    "bot-spam" if command else os.getenv(WEEKLYPROMPTS_REPORT_CHANNEL)
+    "bot-spam" if is_command else os.getenv(WEEKLYPROMPTS_REPORT_CHANNEL)
   )
 
   today_week = get_today_week()
   prompts = WEEKLYPROMPT_DICT_WEEK_TO_PROMPT[today_week]
+
+  if not is_done_this_week():
+    message = \
+      pystache.render(
+        MESSAGE_WEEKLYPROMPT_WEEK_MESSAGE,
+        {
+          "week": today_week,
+          "prompts": [
+            {
+              "id": id + 1,
+              "emoji": prompt.emoji,
+              "prompt": prompt.prompt
+            }
+            for id, prompt in enumerate(
+              prompts
+            )
+          ],
+        }
+      )
+    await channel_to_send.send(message)
   
   message = \
     pystache.render(
       MESSAGE_WEEKLYPROMPT_SCORE_MESSAGE,
       {
         "game": "Weekly Prompts",
-        "role": "@everyone",
+        "role": "@everyo",
         "prompts": [
           {
             "id": id + 1,
@@ -129,6 +150,8 @@ async def get_scores(command = False):
       }
     )
 
+  print(message)
+
   await channel_to_send.send(message)
 
 async def update_inktober(user, state, date):
@@ -139,7 +162,7 @@ async def update_inktober(user, state, date):
     "uid" : [user.id],
   })
 
-  print(df_discord_members)
+  #print(df_discord_members)
 
   for index, row in df_inktober.iterrows():
     # iterates over the sheet
@@ -162,28 +185,93 @@ This handler handles the message.
 async def on_message(message):
   guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
   print(DiscordBot().bot.user.mentioned_in(message))
+  print(message.content)
+  
   if (
     # If mentioned in artwork receiving channel
-    message.channel.name == os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL) and \
+    message.channel.name == os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL) \
+    
     # The message mentions the bot
-    DiscordBot().bot.user.mentioned_in(message) and \
+    and (
+      DiscordBot().bot.user.mentioned_in(message) \
+      # or re.search(f"@{DiscordBot().bot.user.name}", message.content) \
+      or re.search(BOT_DISCORD_ID_WEIRD, message.content) \
+    ) \
     # The author is not the bot
-    message.author != DiscordBot().bot.user
+    and message.author != DiscordBot().bot.user
   ):
 
     print("TEXT: ", message.content)
+    try:
+      message_payload = get_processed_input_message(message.content)
+    except Exception as err:
+      print(err)
+      message = \
+        pystache.render(
+          MESSAGE_WEEKLYPROMPT_WRONG_REQUEST_INPUT,
+          {
+            "author": message.author.id,
+            "bot_name": DiscordBot().bot.user.display_name
+          }
+        )
+      return await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL)).send(message)
 
-    week_to_approve = get_day_from_message(message)
-    prompt_ids = map(lambda x: int(x.strip()), message.content.split(" "))
+    print(message_payload)
+    week_to_approve = int(message_payload["week"])
+
+    """
+    Validate week
+    """
+    if (week_to_approve > int(get_recorded_week())):
+      return await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL)).send(
+        f"<@{message.author.id}> ** You cannot submit into the future! **"
+      )
+    elif (week_to_approve < 3):
+      return await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL)).send(
+        f"<@{message.author.id}> ** You cannot choose a week before week 3... **"
+      )
+
+    prompt_ids = [int(i) for i in message_payload["prompt"]]
+    
+    """
+    Validate prompts
+    """
+    for prompt_id in prompt_ids:
+     if (
+       prompt_id < 1 
+       or prompt_id > len(WEEKLYPROMPT_DICT_WEEK_TO_PROMPT[week_to_approve]) \
+     ):
+      message = \
+        pystache.render(
+          MESSAGE_WEEKLYPROMPT_WRONG_WEEK,
+          {
+            "week": get_recorded_week(),
+            "author": message.author.id,
+            "prompts": [
+              {
+                "id": id + 1,
+                "emoji": prompt.emoji,
+                "prompt": prompt.prompt
+              }
+              for id, prompt in enumerate(
+                WEEKLYPROMPT_DICT_WEEK_TO_PROMPT[week_to_approve]
+              )
+            ],
+          }
+        )
+      return await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL)).send(
+        message 
+      )
+
     prompts = [WEEKLYPROMPT_DICT_WEEK_TO_PROMPT[week_to_approve][prompt_id] for prompt_id in prompt_ids]
-
+      
     # if no io/ existing in the system, make io/
     if "io" not in os.listdir(os.getcwd()):
       os.mkdir(DIR_OUTPUT)
 
     if len(message.attachments) <= 0 :
       return await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL)).send(
-        "You did not attach an artwork image!"
+        f"<@{message.author.id}> You did not attach an artwork image!"
       )
 
     # Check if the player has uploaded his limit.

@@ -86,12 +86,12 @@ def register_events():
           return
 
       approve_request_to_service = tuple(filter(lambda i: i["message_approve_artwork"].id == message_approve_artwork.id, approve_queue))[0]
-      print(approve_request_to_service)
+      #print(approve_request_to_service)
       attacking_user, attacked_user = approve_request_to_service["attacking_user"], approve_request_to_service["attacked_user"]
       message_artwork = approve_request_to_service["message_artwork"]
       approve_queue.remove(approve_request_to_service)
 
-      print(approve_queue)
+      #print(approve_queue)
 
       if emoji == WAIFUWARS_CONCEDE_SIGN:
           await DiscordBot().get_channel(guild, os.getenv(WAIFUWARS_APPROVE_CHANNEL)).send(

@@ -5,6 +5,7 @@ import controller
 from models.DiscordBot import DiscordBot
 from controller import inktober as ink
 from controller import waifuwars as waf
+from controller import weeklyprompts as weekp
 
 import asyncio
 from controller.birthdayTracker import birthday_task
@@ -24,7 +25,7 @@ from config_loader import (
 	ART_FIGHT_MODE_INKTOBER,
 	ART_FIGHT_MODE_WAIFUWARS,
 )
-from utils.constants import ART_FIGHT_STATE, EXTRAVAGANZA_ROLE
+from utils.constants import ART_FIGHT_MODE_WEEKLY_PROMPTS, ART_FIGHT_STATE, BOT_USERNAME, EXTRAVAGANZA_ROLE
 from utils.utils import (
 	get_day_from_message,
 	get_num_days_away,
@@ -43,9 +44,10 @@ def register_events():
 	bot = DiscordBot().bot
 	@bot.event
 	async def on_ready():
-		DiscordBot().set_up_after_run()
+		print("[INFO] Ready!")
+		await DiscordBot().bot.user.edit(username=os.getenv(BOT_USERNAME))
 		guild = DiscordBot().get_guild(None)
-
+			
 		# Getting all the guilds our bot is in
 		for guild in bot.guilds:
 
@@ -56,12 +58,17 @@ def register_events():
 			# print(guild.roles)
 
 		print(f'{bot.user} has connected to Discord!')
+		print(os.getenv(ART_FIGHT_STATE))
+
 		if os.getenv("ENV") == "production":
 			bot.loop.create_task(birthday_task())
+
 		if os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
-			bot.loop.create_task(ink.inktober_task())
+			bot.loop.create_task(ink.task())
 		elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WAIFUWARS:
-			bot.loop.create_task(waf.waifuwars_task())
+			bot.loop.create_task(waf.task())
+		elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS:
+			bot.loop.create_task(weekp.task())
 
 		bot.loop.create_task(DiscordBot().task())
 

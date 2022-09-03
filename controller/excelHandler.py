@@ -179,12 +179,12 @@ def update_columns_to_gsheets(input_df, doc_id, column_names, name_dict=None):
     dfs_to_update = []
     #print(input_df)
 
-    print("COL: ", column_names)
+    #print("COL: ", column_names)
     # Rearrange to have name, discord, birthday... columns on the leftmost
     column_names = [GSHEET_COLUMN_NAME, GSHEET_COLUMN_DISCORD, GSHEET_COLUMN_BIRTHDAY] + \
         list(filter(lambda x: x not in [GSHEET_COLUMN_NAME, GSHEET_COLUMN_DISCORD, GSHEET_COLUMN_BIRTHDAY], column_names))
 
-    print("COL: ", column_names)
+    #print("COL: ", column_names)
 
     for id, worksheet in enumerate(worksheets, start = 1):
         print("Updating worksheet: ", worksheet.title)
@@ -200,8 +200,8 @@ def update_columns_to_gsheets(input_df, doc_id, column_names, name_dict=None):
             if GSHEET_COLUMN_DISCORD_ID not in output_df.columns:
                 continue
             temp_df = input_df.iloc[0 : offset]
-            print(output_df)
-            print(temp_df)
+            #print(output_df)
+            #print(temp_df)
             # print(output_df.columns)
             # print(temp_df.columns)
             # print(input_df.iloc[offset : ][GSHEET_COLUMN_DISCORD_ID])
@@ -219,7 +219,7 @@ def update_columns_to_gsheets(input_df, doc_id, column_names, name_dict=None):
                 )
             ]
 
-            print(output_df)
+            #print(output_df)
 
         else:
             output_df = pd.DataFrame(worksheet.get_all_values())
@@ -236,8 +236,8 @@ def update_columns_to_gsheets(input_df, doc_id, column_names, name_dict=None):
             output_df = input_df[column_names].iloc[offset : offset + len_worksheet]
 
             offset += len_worksheet
-        print(input_df)
-        print(output_df)
+        #print(input_df)
+        #print(output_df)
         dfs_to_update.append(output_df.values.tolist())
         #print(values)
         #print([output_df.columns.values.tolist()] + values)
@@ -338,8 +338,8 @@ def get_sheet_df_from_drive(docid, name_dict = qn_to_colnames, column_names = No
         output_df = output_df.assign(
             **{k: np.nan for k in missing_column_names}
         )
-    print(output_df)
-    print("323")
+    #print(output_df)
+    #print("323")
     return output_df
 
 def similar(a, b):
@@ -366,7 +366,7 @@ def similar_in_num(a, b):
 def verify_is_okay_to_share_by_discord_name(discord_name, df):
     discord_name_from_df = get_fuzzily_discord_handle(discord_name, df)
     _df = df.loc[df["Discord"] == discord_name_from_df]
-    print(_df, _df["ArtPostOk"])
+    #print(_df, _df["ArtPostOk"])
     return True if _df["ArtPostOk"].values[0] == "I agree" else False
 
 def get_fuzzily_discord_handle(discord_name, member_df, get_uid = False):
@@ -399,7 +399,7 @@ def get_social_handle_from_discord_name(df, discord_name, with_url = False):
     discord_name_from_df = get_fuzzily_discord_handle(discord_name, df)
 
     _df = df.loc[df['Discord'] == discord_name_from_df]
-    print(_df)
+    #print(_df)
     if _df["SNS_INSTA"].values[0].strip() != "":
         return [_df["SNS_INSTA"].values[0], "Instagram"]
     elif _df["SNS_TWITTER"].values[0].strip() != "":

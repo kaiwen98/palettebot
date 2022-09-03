@@ -74,7 +74,7 @@ DICT_DAY_TO_PROMPT = {
   31: "Your Worst Fear"
 }
 
-async def inktober_task():
+async def task():
   counter = 0
   channel_to_send = os.getenv("INKTOBER_REPORT_CHANNEL")
   # await DiscordBot().get_channel(GUILD, channel_to_send).send(
@@ -118,7 +118,7 @@ async def get_scores(command = False):
     "uid" : [i.id for i in guild.members],
   })
 
-  print(df_discord_members)
+  #print(df_discord_members)
 
   if get_today_date().day < 11: 
     prompt_type = ":potted_plant:"
@@ -172,7 +172,7 @@ async def update_inktober(user, state, date):
     "uid" : [user.id],
   })
 
-  print(df_discord_members)
+  #print(df_discord_members)
 
   for index, row in df_inktober.iterrows():
     # iterates over the sheet

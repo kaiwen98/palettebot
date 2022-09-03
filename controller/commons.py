@@ -221,7 +221,7 @@ async def get_photos(input_channel_name, palette_particulars, dd_begin, mm_begin
     await ctx.send(
       get_list_of_artists(curr_dir)
     )
-    print(curr_dir)
+    #print(curr_dir)
     for file in os.listdir(curr_dir):
       print(os.path.join(curr_dir, file))
       zipFile.write(os.path.join(curr_dir, file), file)

@@ -145,7 +145,7 @@ async def handle_check_birthdates_and_give_shoutout():
     except:
       print("Date not valid.")
 
-    print(member_info)
+    #print(member_info)
     update_birthday_state_to_gsheets(member_info)
 
 

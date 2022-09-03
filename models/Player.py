@@ -36,7 +36,7 @@ class Player():
     self.message_id_sets: dict = {
       type: {} for type in GSHEET_COLUMNS_MESSAGE_STATES
     }
-    print(self.attributes[GSHEET_WEEKLYPROMPT_COLUMN_STATE]) 
+    #print(self.attributes[GSHEET_WEEKLYPROMPT_COLUMN_STATE]) 
     # Configure weekly prompt scores
     for week in range(NUM_WEEKS):
       self.set_weeklyprompt_scores_by_encoding(
@@ -71,7 +71,7 @@ class Player():
     return ';'.join(
       map(
         lambda x: str(x),
-        self.weeklyprompts_week_to_num_submitted_artworks
+        self.weeklyprompts_week_to_num_submitted_artworks.values()
       )
     )
 
@@ -82,6 +82,7 @@ class Player():
     return self.weeklyprompts_week_to_num_submitted_artworks[week]
 
   def get_weeklyprompt_scores_sum(self):
+    print(self.weeklyprompts_week_to_num_submitted_artworks)
     return sum(self.weeklyprompts_week_to_num_submitted_artworks.values())
 
   """
@@ -92,7 +93,7 @@ class Player():
     return ';'.join(
       map(
         lambda x: str(x),
-        self.inktober_day_to_submitted_artworks
+        self.inktober_day_to_submitted_artworks.values()
       )
     )
 
@@ -126,9 +127,9 @@ class Player():
     self.message_id_sets[message_id_type] = payload
 
   def add_message_id_to_set_by_type(self, message_id, message_id_type, payload={}):
-    print(message_id_type)
-    print(message_id)
-    print(payload)
+    #print(message_id_type)
+    #print(message_id)
+    #print(payload)
     self.message_id_sets[message_id_type][message_id] = payload
 
   def pop_message_id_from_set_by_type(self, message_id, message_id_type):

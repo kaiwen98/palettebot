@@ -11,6 +11,7 @@ import discord.ext as d_ext
 import pandas as pd
 import time
 import os
+import asyncio
 
 import uuid
 
@@ -92,19 +93,23 @@ class DiscordBot(metaclass=Singleton):
     self.initialize_players(self.players_df)
 
   def update_new_players(self):
-    self.players_df = self.get_players_df_from_players()
+    df = self.get_players_df_from_players()
 
     # Populate the unidentified discord members into the last worksheet.
-    self.players_df = self.get_appended_unrecorded_members(self.players_df)
+    self.players_df = self.get_appended_unrecorded_members(df)
+    self.initialize_players(self.players_df, False)
 
-  def initialize_players(self, df):
+
+  def initialize_players(self, df, isFirstCalled=True):
     for index, row in df.iterrows():
 
       # set name as primary key because every member has it.
       key = row[GSHEET_COLUMN_NAME]
 
       if key in self.players.keys():
-        print("DUPLICATE KEY ERROR ", key)
+        if isFirstCalled:
+          print("DUPLICATE KEY ERROR ", key)
+          continue
 
       self.players[key] = Player(row)
 
@@ -143,8 +148,8 @@ class DiscordBot(metaclass=Singleton):
     ))
 
     df_unrecorded_members = pd.DataFrame(src_unrecorded_members)
-    print(df.columns.sort_values())
-    print(df_unrecorded_members.columns.sort_values())
+    #print(df.columns.sort_values())
+    #print(df_unrecorded_members.columns.sort_values())
 
     return pd.concat([df, df_unrecorded_members])
 
@@ -173,27 +178,26 @@ class DiscordBot(metaclass=Singleton):
       column_names=GSHEET_PLAYER_COLUMNS
     )
 
-  def task(self):
-    df = get_player_from_gsheets()
-    self.initialize_players(df)
-    print("Launching Gsheet update task...")
+  async def task(self):
+    print("Starting Gsheet update task...")
+    DiscordBot().set_up_after_run()
     while True:
       # Crawls for new players to append to df
-      self.update_new_players()
+      #self.update_new_players()
 
       # Update all player data to DB
-      self.update_players_to_db()
+      #self.update_players_to_db()
 
-      print("Gsheet updated")
+      #print("Gsheet updated")
 
       # Sleep
-      time.sleep(self.update_delay)
+      await asyncio.sleep(self.update_delay)
 
   def get_guild(self, guild_name=None):
     #print(DISCORD_GUILD)
     if guild_name is None:
       guild_name = os.getenv(DISCORD_GUILD)
-      print(guild_name) 
+      #print(guild_name) 
 
     filtered_guilds = \
       list(filter(

@@ -10,11 +10,13 @@ from utils.constants import (
   ENV
 )
 
+import re
+
 
 def get_file_path(*path):
   path = os.path.join(os.getcwd(), *path)
   if not os.path.isdir(path):
-      return path
+    return path
   file_name = list(os.listdir(path))[0]
   return os.path.join(path, file_name)
 
@@ -47,17 +49,20 @@ def get_week_from_datetime(input_datetime):
     else sem2_week_offset.isocalendar()[1]
 
 def get_today_date():
+  return get_today_datetime().date()
+
+def get_today_datetime():
   # Gets date with time zone accounted for/=
   # SGT = UTC + 8hrs
-  date = datetime.now() + (
+  output_datetime = datetime.now() + (
     timedelta(
       hours = 8 if os.getenv(ENV) == 'production' else 0
     )   
   )
-  return date.date()
+  return output_datetime
 
 def get_today_week():
-  return get_week_from_datetime(get_today_date())
+  return get_week_from_datetime(get_today_datetime())
 
 def get_num_days_away(member_date):
   dummy_member_date = datetime(
@@ -118,6 +123,34 @@ def get_day_from_message(message, custom_input=True):
       return int(message.content.strip().split(" ")[1])
 
   return get_today_date().day
+
+def get_processed_input_message(input):
+  # Remove bot referencing bot by discord id
+  input = re.sub(r'<@&[\d]+>\s*\n+', '', input)
+  # Remove bot referencing bot by discord name (if copypaste)
+  input = re.sub(r'@.*\s*\n+', '', input)
+  # Convert all to lowercase to avoid type sensitivity
+  input = input.lower().strip()
+  # Regex pattern to validate submission text
+  input_validation_pattern = r'^week:\s*[\d]+\s*(\r\n|\n|\n\n)prompt:\s*[\d(\s|,)*]+$'
+
+  if not re.match(input_validation_pattern, input):
+    print("Error parsing. Please follow format.")
+    raise Exception("Error parsing. Please follow the designated formate carefully.")
+
+  # Process text to produce dict of tokens
+  tokens = list(map(
+    lambda tok: re.split(r',*\s+', tok.strip()),
+    re.sub(r'\n|:', "^", input).split("^"))
+                )
+  print(tokens)
+  return (
+    {tokens[i][0]: tokens[i+1] 
+     if tokens[i][0] == 'prompt' 
+     else tokens[i+1][0] 
+     for i in range(0, len(tokens), 2)}
+  )
+
 
 
 

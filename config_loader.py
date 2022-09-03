@@ -21,6 +21,8 @@ Global variables
 
 global_config_params = {
   "GLOBAL_DATE": None,
+  "GLOBAL_WEEK": None,
+  "GLOBAL_DATETIME": None,
   "GLOBAL_DELAY": None
 }
 
@@ -36,6 +38,26 @@ def set_recorded_date(date):
   global global_config_params
   global_config_params["GLOBAL_DATE"] = date
 
+def get_recorded_date():
+  global global_config_params
+  return global_config_params["GLOBAL_DATE"]
+
+def set_recorded_week(week):
+  global global_config_params
+  global_config_params["GLOBAL_WEEK"] = week
+
+def get_recorded_week():
+  global global_config_params
+  return global_config_params["GLOBAL_WEEK"]
+
+def set_recorded_datetime(datetime):
+  global global_config_params
+  global_config_params["GLOBAL_DATETIME"] = datetime
+
+def get_recorded_datetime():
+  global global_config_params
+  return global_config_params["GLOBAL_DATETIME"]
+
 def get_delay():
   global global_config_params
   return global_config_params["GLOBAL_DELAY"]
@@ -44,9 +66,7 @@ def set_delay(delay):
   global global_config_params
   global_config_params["GLOBAL_DELAY"] = delay
 
-def get_recorded_date():
-  global global_config_params
-  return global_config_params["GLOBAL_DATE"]
+
 
 def load_config(env):
   print("Loading config")
@@ -60,7 +80,7 @@ def load_config(env):
   if is_production_env:
     art_fight_state = ART_FIGHT_MODE_INKTOBER if datetime.now().month == 10 else ART_FIGHT_MODE_NOTHING
   else:
-    art_fight_state = ART_FIGHT_MODE_INKTOBER
+    art_fight_state = ART_FIGHT_MODE_WEEKLY_PROMPTS
 
   set_key(dotenv_path, "ART_FIGHT_STATE", str(art_fight_state))
 

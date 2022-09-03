@@ -88,7 +88,7 @@ def update_waifu_wars_by_user(df, ref_df, col):
 		print("HEREEEEEEEEEEEE", df.at[index, col])
 		return df.at[index, col]
 
-async def waifuwars_task():
+async def task():
 		DiscordBot().get_channel(None, os.getenv(WAIFUWARS_REPORT_CHANNEL))
 		while True:
 			# do something
