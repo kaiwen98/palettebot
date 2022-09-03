@@ -106,11 +106,11 @@ def get_player_from_gsheets():
         column_names=GSHEET_PLAYER_COLUMNS
     )
 
+    # Clean data
     sheet[GSHEET_WEEKLYPROMPT_COLUMN_STATE] = sheet[GSHEET_WEEKLYPROMPT_COLUMN_STATE] \
         .replace(r'^\s*$', np.nan, regex=True) \
         .fillna(("0;" * NUM_WEEKS)[:-1])
 
-    # Clean data
     sheet[GSHEET_INKTOBER_COLUMN_STATE] = sheet[GSHEET_INKTOBER_COLUMN_STATE] \
         .replace(r'^\s*$', np.nan, regex=True) \
         .fillna(DEFAULT_INKTOBER_STATE_DATA)
@@ -176,15 +176,18 @@ def update_columns_to_gsheets(input_df, doc_id, column_names, name_dict=None):
     # print(worksheets[0].title)
     offset = 0
     output_df = {}
-    df_list = []
+    dfs_to_update = []
     #print(input_df)
 
-    # Rearrange to have name, discord... columns on the leftmost
+    print("COL: ", column_names)
+    # Rearrange to have name, discord, birthday... columns on the leftmost
     column_names = [GSHEET_COLUMN_NAME, GSHEET_COLUMN_DISCORD, GSHEET_COLUMN_BIRTHDAY] + \
         list(filter(lambda x: x not in [GSHEET_COLUMN_NAME, GSHEET_COLUMN_DISCORD, GSHEET_COLUMN_BIRTHDAY], column_names))
+
+    print("COL: ", column_names)
+
     for id, worksheet in enumerate(worksheets, start = 1):
         print("Updating worksheet: ", worksheet.title)
-
         input_df = correct_df_header(input_df, name_dict = name_dict)
 
         #print(input_df.iloc[offset:])
@@ -208,6 +211,8 @@ def update_columns_to_gsheets(input_df, doc_id, column_names, name_dict=None):
                     # temp_df[GSHEET_COLUMN_DISCORD_ID].values.tolist()
                 # )
             # ].columns)
+
+            # Filters out names which are already present in the preceding worksheeets
             output_df = output_df[
                 ~output_df[GSHEET_COLUMN_DISCORD_ID].isin(
                     temp_df[GSHEET_COLUMN_DISCORD_ID].values.tolist()
@@ -233,10 +238,13 @@ def update_columns_to_gsheets(input_df, doc_id, column_names, name_dict=None):
             offset += len_worksheet
         print(input_df)
         print(output_df)
-        values = output_df.values.tolist()
+        dfs_to_update.append(output_df.values.tolist())
         #print(values)
         #print([output_df.columns.values.tolist()] + values)
-        worksheet.update([output_df.columns.values.tolist()] + values)
+
+    # Only write to DB if there are no pd problems
+    for id, value in enumerate(dfs_to_update):
+        worksheets[id].update([column_names] + value)
     print("Done upload!")
  
 """
@@ -325,6 +333,7 @@ def get_sheet_df_from_drive(docid, name_dict = qn_to_colnames, column_names = No
     output_df = pd.concat(df_list)
 
     # It is assumed that all worksheets have the same columns.
+    # If excel sheet is missing the columns, create new column will null values.
     if column_names is not None and missing_column_names is not None:
         output_df = output_df.assign(
             **{k: np.nan for k in missing_column_names}

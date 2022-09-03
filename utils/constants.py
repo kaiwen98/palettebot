@@ -66,9 +66,10 @@ DISCORD_GUILD = "DISCORD_GUILD"
 NUM_WEEKS = 13
 NUM_DAYS = 31
 
-
 DF_ROW = 0
 DF_COL = 1
+
+WEEKLYPROMPTS_UPLOAD_LIMIT = 2
 
 DEFAULT_INKTOBER_STATE_DATA = ("0;" * NUM_DAYS)[:-1]
 DEFAULT_WEEKLYPROMPT_STATE_DATA = ("0;" * NUM_WEEKS)[:-1]
@@ -169,11 +170,13 @@ GSHEET_WEEKLYPROMPT_COLUMNS = [
   *GSHEET_WEEKLYPROMPT_COLUMNS_MESSAGE_STATES
 ]
 
-GSHEET_PLAYER_COLUMNS = list(set([
+# dict.fromkeys is needed to preserve the order of the list after removal of duplicates.
+# https://stackoverflow.com/questions/480214/how-do-i-remove-duplicates-from-a-list-while-preserving-order
+GSHEET_PLAYER_COLUMNS = list(dict.fromkeys([
   *GSHEET_COMMON_COLUMNS, 
+  *GSHEET_BIRTHDAY_COLUMNS,
   *GSHEET_WEEKLYPROMPT_COLUMNS,
   *GSHEET_WAIFUWARS_COLUMNS,
-  *GSHEET_BIRTHDAY_COLUMNS,
   *GSHEET_INKTOBER_COLUMNS
 ]))
 
@@ -182,6 +185,7 @@ GSHEET_COLUMNS_MESSAGE_STATES = [
   *GSHEET_WEEKLYPROMPT_COLUMNS_MESSAGE_STATES,
   *GSHEET_WAIFUWARS_COLUMNS_MESSAGE_STATES
 ]
+
 
 class Prompt():
   def __init__(self, prompt, emoji):

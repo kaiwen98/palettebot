@@ -3,7 +3,7 @@ from config_loader import load_config
 from models.DiscordBot import DiscordBot
 from models.Player import Player
 from utils.constants import GSHEET_WEEKLYPROMPT_COLUMN_APPROVED, GSHEET_WEEKLYPROMPT_COLUMN_PENDING_APPROVAL, GSHEET_WEEKLYPROMPT_COLUMN_REJECTED
-from utils.utils import get_file_path, get_week_from_datetime
+from utils.utils import get_file_path, get_rank_emoji, get_week_from_datetime
 from controller.excelHandler import get_weeklyprompts_from_gsheets, update_birthday_state_to_gsheets, update_weeklyprompt_state_to_gsheets
 
 def test2():
@@ -30,7 +30,8 @@ def test2():
           {
             "id": 1,
             "score": 8,
-            "name": "Looi Kai Wen"
+            "name": "Looi Kai Wen",
+            "emoji": get_rank_emoji(1)
           }
         ]
       }
@@ -62,7 +63,7 @@ def test1():
   )
 
   print(
-    player.week_to_num_submitted_artworks
+    player.weeklyprompts_week_to_num_submitted_artworks
   )
 
   DiscordBot().update_players_to_db()
@@ -119,7 +120,8 @@ if __name__ == "__main__":
   @bot.event
   async def on_ready():
     DiscordBot().set_up_after_run()
-    test2()
+    test1()
+    #test2()
 
   DiscordBot().run()
 

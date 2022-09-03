@@ -43,6 +43,7 @@ def register_events():
 	bot = DiscordBot().bot
 	@bot.event
 	async def on_ready():
+		DiscordBot().set_up_after_run()
 		guild = DiscordBot().get_guild(None)
 
 		# Getting all the guilds our bot is in
