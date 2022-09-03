@@ -24,7 +24,7 @@ from config_loader import (
 	ART_FIGHT_MODE_INKTOBER,
 	ART_FIGHT_MODE_WAIFUWARS,
 )
-from utils.commons import ART_FIGHT_STATE, EXTRAVAGANZA_ROLE
+from utils.constants import ART_FIGHT_STATE, EXTRAVAGANZA_ROLE
 from utils.utils import (
 	get_day_from_message,
 	get_num_days_away,

@@ -8,7 +8,7 @@ import discord
 from discord.ext import commands
 import getopt, sys
 from models.DiscordBot import DiscordBot
-from utils.commons import (
+from utils.constants import (
   ART_FIGHT_MODE_INKTOBER, 
   ART_FIGHT_MODE_NOTHING,
   ART_FIGHT_MODE_WAIFUWARS,

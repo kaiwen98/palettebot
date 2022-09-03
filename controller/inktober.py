@@ -14,7 +14,7 @@ from controller.excelHandler import (
   set_up_inktober, 
   update_inktober_state_to_gsheets
 )
-from utils.commons import (
+from utils.constants import (
   APPROVE_SIGN,
   DELAY, 
   DIR_OUTPUT,

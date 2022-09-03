@@ -1,7 +1,7 @@
 import os
 import re
 
-from utils.commons import DIR_OUTPUT, ENV
+from utils.constants import DIR_OUTPUT, ENV
 
 from controller.excelHandler import set_up_member_info
 from models.DiscordBot import DiscordBot
@@ -39,7 +39,7 @@ from controller.excelHandler import (
   verify_is_okay_to_share_by_discord_name
 )
 
-from utils.commons import (
+from utils.constants import (
   DIR_OUTPUT, 
   DISCORD_CHANNEL_ART_GALLERY, 
   DISCORD_MESSAGES_LIMIT,

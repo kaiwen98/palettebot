@@ -1,4 +1,4 @@
-from utils.commons import (
+from utils.constants import (
   GSHEET_BIRTHDAY_COLUMN_STATE,
   GSHEET_COLUMN_BIRTHDAY,
   GSHEET_COLUMN_DISCORD,

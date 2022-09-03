@@ -14,7 +14,7 @@ import os
 
 import uuid
 
-from utils.commons import (
+from utils.constants import (
   ART_FIGHT_MODE_INKTOBER,
   ART_FIGHT_MODE_WAIFUWARS,
   ART_FIGHT_MODE_WEEKLY_PROMPTS,

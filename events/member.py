@@ -13,7 +13,7 @@ from controller.excelHandler import (
   update_birthday_state_to_gsheets
 )
 
-from utils.commons import EXTRAVAGANZA_ROLE, MEMBER_ROLE
+from utils.constants import EXTRAVAGANZA_ROLE, MEMBER_ROLE
 from utils.utils import (
   get_day_from_message,
   get_num_days_away

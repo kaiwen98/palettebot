@@ -28,7 +28,7 @@ spreadsheet = None
 # Note: You can go to the sheets link via the following link:
 # https://docs.google.com/spreadsheets/d/{{DOCID}}
 
-from utils.commons import (
+from utils.constants import (
     DEFAULT_INKTOBER_STATE_DATA,
     DEFAULT_MESSAGES_DATA,
     DEFAULT_WEEKLYPROMPT_STATE_DATA,

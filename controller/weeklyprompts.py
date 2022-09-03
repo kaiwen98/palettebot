@@ -14,7 +14,7 @@ from controller.excelHandler import (
   set_up_inktober, 
   update_inktober_state_to_gsheets
 )
-from utils.commons import (
+from utils.constants import (
   APPROVE_SIGN,
   ART_FIGHT_MODE_INKTOBER,
   ART_FIGHT_MODE_WEEKLY_PROMPTS,

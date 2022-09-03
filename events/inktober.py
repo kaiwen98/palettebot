@@ -4,7 +4,7 @@ Consolidates all commands that is related to Inktober.
 from models.DiscordBot import DiscordBot
 from controller import inktober as ink
 import asyncio
-from utils.commons import INKTOBER_APPROVE_CHANNEL, INKTOBER_RECEIVE_CHANNEL
+from utils.constants import INKTOBER_APPROVE_CHANNEL, INKTOBER_RECEIVE_CHANNEL
 from utils.utils import (
   get_day_from_message
 )

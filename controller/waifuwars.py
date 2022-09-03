@@ -30,7 +30,7 @@ from controller.excelHandler import (
 )
 from controller.commons import get_list_of_artists
 from controller.inktober import DICT_DAY_TO_PROMPT
-from utils.commons import (
+from utils.constants import (
 	APPROVE_SIGN,
 	DELAY,
 	DIR_OUTPUT, 

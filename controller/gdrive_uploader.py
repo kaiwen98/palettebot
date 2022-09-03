@@ -8,7 +8,7 @@ from pydrive.auth import GoogleAuth
 from pydrive.drive import GoogleDrive
 import os
 from datetime import datetime
-from utils.commons import DRIVE__PALETTE_REP_TRACKER
+from utils.constants import DRIVE__PALETTE_REP_TRACKER
 from utils.utils import get_file_path
 
 gauth = GoogleAuth()

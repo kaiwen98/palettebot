@@ -17,7 +17,7 @@ import os
 import pandas as pd
 
 import config_loader as cfg
-from utils.commons import ART_FIGHT_MODE_INKTOBER, ART_FIGHT_MODE_WAIFUWARS, ART_FIGHT_STATE
+from utils.constants import ART_FIGHT_MODE_INKTOBER, ART_FIGHT_MODE_WAIFUWARS, ART_FIGHT_STATE
 
 
 def register_events():

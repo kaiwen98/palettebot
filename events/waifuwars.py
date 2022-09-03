@@ -20,7 +20,7 @@ from controller.commons import get_list_of_artists
 from controller.inktober import DICT_DAY_TO_PROMPT
 from controller.waifuwars import update_waifuwars
 from controller import waifuwars as waf
-from utils.commons import (
+from utils.constants import (
     APPROVE_SIGN,
     DIR_OUTPUT, 
     DISCORD_CHANNEL_ART_GALLERY, 

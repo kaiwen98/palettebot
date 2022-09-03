@@ -33,7 +33,7 @@ from controller.excelHandler import (
   verify_is_okay_to_share_by_discord_name
 )
 from controller.commons import get_list_of_artists
-from utils.commons import (
+from utils.constants import (
   BIRTHDAY_REPORT_CHANNEL,
   DELAY,
   DIR_OUTPUT, 

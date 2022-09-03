@@ -10,7 +10,7 @@ from controller.excelHandler import (
   set_up_member_info,
   update_birthday_state_to_gsheets
 )
-from utils.commons import DISCORD_GUILD, GSHEET_COLUMN_BIRTHDAY, GSHEET_COLUMN_DISCORD
+from utils.constants import DISCORD_GUILD, GSHEET_COLUMN_BIRTHDAY, GSHEET_COLUMN_DISCORD
 
 from utils.utils import (
   get_day_from_message,

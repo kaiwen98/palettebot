@@ -2,7 +2,7 @@ from datetime import datetime
 from datetime import timedelta
 import os
 
-from utils.commons import (
+from utils.constants import (
   DIR_OUTPUT, 
   DISCORD_CHANNEL_WAIFU_WARS,
   DISCORD_GUILD, 
