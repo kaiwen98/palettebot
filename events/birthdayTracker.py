@@ -89,6 +89,7 @@ def register_events():
       "```The Bot has forgotten when shoutouts were made!```"
     )
 
-    DiscordBot().update_players_to_db()
+    await DiscordBot().update_players_to_db()
+
 
 

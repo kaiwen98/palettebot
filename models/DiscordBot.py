@@ -80,12 +80,12 @@ class DiscordBot(metaclass=Singleton):
     while True:
       # Sleep
       await asyncio.sleep(self.update_delay)
-      self.sync_db()
+      await self.sync_db()
 
 
-  def sync_db(self):
+  async def sync_db(self):
       # Crawls for new players to append to df
-      self.update_new_players()
+      await self.update_new_players()
 
       # Update all player data to DB
       # self.update_players_to_db()
@@ -98,7 +98,7 @@ class DiscordBot(metaclass=Singleton):
   Some utilities are only accessible after the bot is running.
   Therefore, the remaining setup that is applicable will run in the ready hook.
   """
-  def set_up_after_run(self):
+  async def set_up_after_run(self):
     print("Generating map of members and uid...")
 
     self.guild = self.get_guild()
@@ -107,12 +107,12 @@ class DiscordBot(metaclass=Singleton):
       "uid" : [i.id for i in self.guild.members],
     })
     
-    self.initialize_players_from_master_tracker()
+    await self.initialize_players_from_master_tracker()
 
   """
   From the master tracker sheet, populate the player information.
   """
-  def initialize_players_from_master_tracker(self, isFirstCalled=True):
+  async def initialize_players_from_master_tracker(self, isFirstCalled=True):
     print("[INFO] Extracting from google sheet...")
     df = get_player_from_gsheets()
 
@@ -123,7 +123,8 @@ class DiscordBot(metaclass=Singleton):
     self.players_df = transform_df_birthday_column(self.players_df)
 
     print("[INFO] Initialising members...")
-    self.initialize_players(self.players_df, isFirstCalled)
+    async with asyncio.Lock():
+      self.initialize_players(self.players_df, isFirstCalled)
 
     print("[INFO] Populating approve queue...")
     for player in self.players.values():
@@ -133,8 +134,8 @@ class DiscordBot(metaclass=Singleton):
       self.approve_queue[ART_FIGHT_MODE_INKTOBER].update(player.message_id_sets[GSHEET_INKTOBER_COLUMN_PENDING_APPROVAL])
       #print(self.approve_queue)
 
-  def update_new_players(self):
-    self.initialize_players_from_master_tracker(False)
+  async def update_new_players(self):
+    await self.initialize_players_from_master_tracker(False)
     # df = self.get_players_df_from_players()
 
     # # Populate the unidentified discord members into the last worksheet.
@@ -252,11 +253,13 @@ class DiscordBot(metaclass=Singleton):
     self.players_df = self.players_df_new
     return True
 
-  def update_players_to_db(self, lazy_load=True):
+  async def update_players_to_db(self, lazy_load=True):
     # If the produced dataframe is different from the previous, update to db.
-    if not self.get_players_df_from_players() and lazy_load:
-      print("[INFO] No change in player df. Skipping update.")
-      return
+
+    async with asyncio.Lock():
+      if not self.get_players_df_from_players() and lazy_load:
+        print("[INFO] No change in player df. Skipping update.")
+        return
 
     update_columns_to_gsheets(
       input_df=self.players_df,

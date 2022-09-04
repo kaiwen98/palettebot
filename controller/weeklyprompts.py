@@ -330,10 +330,13 @@ async def on_message(message):
     # To store in queue for retrieval.
     DiscordBot().approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS][message_approve_artwork.id] = payload_to_store
 
+
     await message_approve_artwork.add_reaction(APPROVE_SIGN)
     await message_approve_artwork.add_reaction(NOT_APPROVE_SIGN)
 
     clear_folder()
+
+    await DiscordBot().update_players_to_db()
 
   else:
     # The message might be a command. run it.
@@ -419,4 +422,6 @@ async def on_raw_reaction_add(payload):
     await message_artwork.add_reaction(NOT_APPROVE_SIGN)
     await remove_messages([message_approve_artwork])
 
-  DiscordBot().sync_db()
+  
+  await DiscordBot().update_players_to_db()
+
