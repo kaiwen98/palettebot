@@ -1,1 +1,1 @@
-worker: python app.py -e production
+worker: python app.py -e local
