@@ -39,6 +39,8 @@ def register_events():
     async def on_raw_reaction_add(payload):
         if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
             await ink.on_raw_reaction_add(payload, DiscordBot().approve_queue)
+        elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS:
+            await weekp.on_raw_reaction_add(payload)
         elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
             await waf.on_raw_reaction_add(payload, DiscordBot().approve_queue)
 

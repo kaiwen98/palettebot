@@ -1,11 +1,16 @@
 from utils.constants import (
+  ART_FIGHT_MODE_INKTOBER,
+  ART_FIGHT_MODE_WAIFUWARS,
+  ART_FIGHT_MODE_WEEKLY_PROMPTS,
   GSHEET_BIRTHDAY_COLUMN_STATE,
   GSHEET_COLUMN_BIRTHDAY,
   GSHEET_COLUMN_DISCORD,
   GSHEET_COLUMN_NAME,
   GSHEET_COLUMNS_MESSAGE_STATES,
+  GSHEET_INKTOBER_COLUMN_PENDING_APPROVAL,
   GSHEET_INKTOBER_COLUMN_STATE,
   GSHEET_INKTOBER_COLUMNS_MESSAGE_STATES,
+  GSHEET_WAIFUWARS_COLUMN_PENDING_APPROVAL,
   GSHEET_WAIFUWARS_COLUMN_STATE_NUMATTACKED,
   GSHEET_WAIFUWARS_COLUMNS_MESSAGE_STATES,
   GSHEET_WEEKLYPROMPT_COLUMN_APPROVED, 
@@ -25,11 +30,11 @@ class Player():
     self.attributes = row_from_gspread_worksheet
 
     self.weeklyprompts_week_to_num_submitted_artworks: dict = {
-      i: 0 for i in range(NUM_WEEKS)
+      i: 0 for i in range(1, NUM_WEEKS + 1, 1)
     }
 
     self.inktober_day_to_submitted_artworks: dict = {
-      i: 0 for i in range(NUM_DAYS)
+      i: 0 for i in range(1, NUM_DAYS+ 1, 1)
     }
     
     # Example message id: 1013124530690084875
@@ -38,12 +43,14 @@ class Player():
     }
     #print(self.attributes[GSHEET_WEEKLYPROMPT_COLUMN_STATE]) 
     # Configure weekly prompt scores
-    for week in range(NUM_WEEKS):
+    for week in range(1, NUM_WEEKS + 1, 1):
       self.set_weeklyprompt_scores_by_encoding(
         self.attributes[GSHEET_WEEKLYPROMPT_COLUMN_STATE], 
         week)
+    
+    #print("HUIOHUI: ", self.weeklyprompts_week_to_num_submitted_artworks)
 
-    for day in range(NUM_DAYS):
+    for day in range(1, NUM_DAYS + 1, 1):
       self.set_inktober_scores_by_encoding(self.attributes[GSHEET_INKTOBER_COLUMN_STATE], day)
 
     messages = {
@@ -82,7 +89,7 @@ class Player():
     return self.weeklyprompts_week_to_num_submitted_artworks[week]
 
   def get_weeklyprompt_scores_sum(self):
-    print(self.weeklyprompts_week_to_num_submitted_artworks)
+    #print(self.weeklyprompts_week_to_num_submitted_artworks)
     return sum(self.weeklyprompts_week_to_num_submitted_artworks.values())
 
   """
@@ -125,6 +132,7 @@ class Player():
   def set_messages_id_lists_by_encoding(self, message_id_type, encoding):
     payload = json.loads(encoding) if len(encoding) else {}
     self.message_id_sets[message_id_type] = payload
+
 
   def add_message_id_to_set_by_type(self, message_id, message_id_type, payload={}):
     #print(message_id_type)
@@ -175,4 +183,6 @@ class Player():
   """
 
   def set_map_by_encoding(self, map, encoding, index):
-    map[index] = int(encoding.split(";")[index])
+    #print(encoding)
+    #print(index)
+    map[index] = int(encoding.split(";")[index-1])

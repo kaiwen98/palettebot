@@ -128,7 +128,7 @@ def get_processed_input_message(input):
   # Remove bot referencing bot by discord id
   input = re.sub(r'<@&[\d]+>\s*\n+', '', input)
   # Remove bot referencing bot by discord name (if copypaste)
-  input = re.sub(r'@.*\s*\n+', '', input)
+  input = re.sub(r'<@.*\s*\n+', '', input)
   # Convert all to lowercase to avoid type sensitivity
   input = input.lower().strip()
   # Regex pattern to validate submission text

@@ -18,6 +18,7 @@ from controller.excelHandler import (
 from utils.config_utils import is_done_this_day, is_done_this_week
 from utils.constants import (
   APPROVE_SIGN,
+  ART_FIGHT_MODE_WAIFUWARS,
   ART_FIGHT_MODE_WEEKLY_PROMPTS,
   BOT_DISCORD_ID_WEIRD,
   DELAY, 
@@ -25,7 +26,9 @@ from utils.constants import (
   DISCORD_GUILD,
   GSHEET_COLUMN_DISCORD,
   GSHEET_COLUMN_NAME,
+  GSHEET_WEEKLYPROMPT_COLUMN_APPROVED,
   GSHEET_WEEKLYPROMPT_COLUMN_PENDING_APPROVAL,
+  GSHEET_WEEKLYPROMPT_COLUMN_REJECTED,
   GSHEET_WEEKLYPROMPT_COLUMN_STATE,
   WEEKLYPROMPTS_APPROVE_CHANNEL,
   WEEKLYPROMPTS_RECEIVE_CHANNEL,
@@ -65,20 +68,20 @@ async def task():
   print("[INFO] Starting WeeklyPrompt Applet...")
   while True:
     # do something
-
+    delay: int = int(os.getenv(DELAY))
+    await asyncio.sleep(delay)
     # try:
     await get_scores()
     # except Exception as e:
     #     await channel.send(
     #         "```Error occured! Contact the administrator. Message: %s```" % (str(e))
     #     )
-    delay: int = int(os.getenv(DELAY))
-    await asyncio.sleep(delay)
+    
 
 async def get_scores(is_command = False):
 
   # Ensures that the score report is only posted once a day, or when the bot restarts.
-  if is_command or is_done_this_day():
+  if (not is_command) and is_done_this_day():
     return
 
 
@@ -92,7 +95,9 @@ async def get_scores(is_command = False):
   today_week = get_today_week()
   prompts = WEEKLYPROMPT_DICT_WEEK_TO_PROMPT[today_week]
 
-  if not is_done_this_week():
+  if not is_done_this_week(
+  #    hour=8
+  ):
     message = \
       pystache.render(
         MESSAGE_WEEKLYPROMPT_WEEK_MESSAGE,
@@ -133,7 +138,7 @@ async def get_scores(is_command = False):
             "id": id + 1,
             "score": player.get_weeklyprompt_scores_sum(),
             "name": player.attributes[GSHEET_COLUMN_DISCORD],
-            "emoji": get_rank_emoji(id)
+            "emoji": get_rank_emoji(id + 1)
           }
           for id, player in enumerate(
             # Filter players with 0 score
@@ -150,32 +155,9 @@ async def get_scores(is_command = False):
       }
     )
 
-  print(message)
+  #print(message)
 
   await channel_to_send.send(message)
-
-async def update_inktober(user, state, date):
-  df_inktober = set_up_inktober()
-
-  df_discord_members = pd.DataFrame({
-    "Discord": [user.name + "#" + str(user.discriminator)],
-    "uid" : [user.id],
-  })
-
-  #print(df_discord_members)
-
-  for index, row in df_inktober.iterrows():
-    # iterates over the sheet
-    # print(row[GSHEET_COLUMN_DISCORD])
-    if get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members, get_uid=True) is None:
-      continue
-
-
-    state_ls = list(row[GSHEET_WEEKLYPROMPT_COLUMN_STATE])
-    state_ls[date] = str(state)
-    df_inktober.at[index, GSHEET_WEEKLYPROMPT_COLUMN_STATE] = "".join(state_ls)
-    # print("HEREEEEEEEEEEEE", _df_inktober.at[index, GSHEET_WEEKLYPROMPT_COLUMN_STATE])
-    update_inktober_state_to_gsheets(df_inktober)
 
 """
 When you mention the bot with the inktober entry,
@@ -184,8 +166,8 @@ This handler handles the message.
 """
 async def on_message(message):
   guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
-  print(DiscordBot().bot.user.mentioned_in(message))
-  print(message.content)
+  #print(DiscordBot().bot.user.mentioned_in(message))
+  #print(message.content)
   
   if (
     # If mentioned in artwork receiving channel
@@ -201,7 +183,7 @@ async def on_message(message):
     and message.author != DiscordBot().bot.user
   ):
 
-    print("TEXT: ", message.content)
+    #print("TEXT: ", message.content)
     try:
       message_payload = get_processed_input_message(message.content)
     except Exception as err:
@@ -216,7 +198,7 @@ async def on_message(message):
         )
       return await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL)).send(message)
 
-    print(message_payload)
+    #print(message_payload)
     week_to_approve = int(message_payload["week"])
 
     """
@@ -269,14 +251,14 @@ async def on_message(message):
     if "io" not in os.listdir(os.getcwd()):
       os.mkdir(DIR_OUTPUT)
 
-    if len(message.attachments) <= 0 :
-      return await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL)).send(
-        f"<@{message.author.id}> You did not attach an artwork image!"
-      )
+    # if len(message.attachments) <= 0 :
+      # return await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL)).send(
+        # f"<@{message.author.id}> You did not attach an artwork image!"
+      # )
 
     # Check if the player has uploaded his limit.
     week = get_today_week()
-    player = DiscordBot().players[message.author.id]
+    player = DiscordBot().players[str(message.author.id)]
 
     if player.get_weeklyprompt_scores_at_week(week) > WEEKLYPROMPTS_UPLOAD_LIMIT:
       return await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL)).send(
@@ -297,10 +279,7 @@ async def on_message(message):
     approve_message = pystache.render(
       MESSAGE_APPROVE_ARTWORK,
       {
-        "prompts": [{
-          "emoji": prompt.emoji,
-          "prompt": prompt.prompt
-        } for prompt in prompts],
+        "prompts": prompts,
         "jumpUrl": message.jump_url
       }
     )
@@ -318,17 +297,32 @@ async def on_message(message):
 
     payload_to_store = {
         "week" : week_to_approve, 
-        "prompts": prompts,
+        "prompts": [
+          {
+            "id": id + 1,
+            "emoji": prompt.emoji,
+            "prompt": prompt.prompt
+          }
+          for id, prompt in enumerate(
+            prompts
+          )
+        ],
         PAYLOAD_PARAM_MESSAGE_TO_SUBMITTED_ARTWORK : message.id, 
         PAYLOAD_PARAM_MESSAGE_TO_APPROVE_ARTWORK : message_approve_artwork.id,
         PAYLOAD_PARAM_MESSAGE_TO_APPROVE_ARTWORK_STATUS : message_approval_status.id
     }
 
-    DiscordBot().players[message.author.name].add_message_id_to_set_by_type(
+    #print(payload_to_store)
+
+    # To store in db for persistence.
+    player.add_message_id_to_set_by_type(
       message_approve_artwork.id, 
       GSHEET_WEEKLYPROMPT_COLUMN_PENDING_APPROVAL,
       payload_to_store
     )
+
+    # To store in queue for retrieval.
+    DiscordBot().approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS][message_approve_artwork.id] = payload_to_store
 
     await message_approve_artwork.add_reaction(APPROVE_SIGN)
     await message_approve_artwork.add_reaction(NOT_APPROVE_SIGN)
@@ -345,27 +339,30 @@ async def on_raw_reaction_add(payload):
   message_approve_artwork_id = payload.message_id
   approver = payload.member
   emoji = payload.emoji.name
+  channel_id = payload.channel_id
   print(emoji)
 
   guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
-  message_approve_artwork = await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_APPROVE_CHANNEL)).fetch_message(message_approve_artwork_id)
+  message_approve_artwork = await DiscordBot().bot.get_channel(channel_id).fetch_message(message_approve_artwork_id)
 
   # If not on approve channel
   if message_approve_artwork.channel.name != os.getenv(WEEKLYPROMPTS_APPROVE_CHANNEL):
+    print("[ERR] Not in approve channel!")
     return
 
   # Ensure approver is of correct access rights
   if len(list(filter(lambda role: role.name in ["Senpai"], approver.roles))) == 0:
+    print("[ERR] Not authorised to approve!")
     return 
 
   try:
     approve_request_to_service = \
-        DiscordBot().get_player_by_id(message_approve_artwork.author.id) \
-        .message_id_sets[GSHEET_WEEKLYPROMPT_COLUMN_PENDING_APPROVAL] \
-        .get(message_approve_artwork_id)
+        DiscordBot().approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS][message_approve_artwork_id]
   except:
+    print("Request Not found")
     return
-
+  
+  print("Approve Request: ", approve_request_to_service)
   week = approve_request_to_service["week"]
 
   message_artwork = await DiscordBot().get_message_by_id(
@@ -378,14 +375,21 @@ async def on_raw_reaction_add(payload):
     approve_request_to_service[PAYLOAD_PARAM_MESSAGE_TO_APPROVE_ARTWORK_STATUS]
   )
 
-  artist_name = message_artwork.author.name
+  player_id = message_artwork.author.id
+  player = DiscordBot().players[str(player_id)]
 
   if emoji == APPROVE_SIGN:
     await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_APPROVE_CHANNEL)).send(
       "> <@%s> approved this post: %s" % (approver.id, message_artwork.jump_url)
     )
 
-    DiscordBot().players[artist_name].increment_weeklyprompt_score_at_week(week, 1)
+    player.increment_weeklyprompt_score_at_week(week, 1)
+
+    player.move_message_id_across_types(
+      message_approve_artwork_id, 
+      GSHEET_WEEKLYPROMPT_COLUMN_PENDING_APPROVAL, 
+      GSHEET_WEEKLYPROMPT_COLUMN_APPROVED
+    )
 
     # Add tick to source artwork
     await message_artwork.add_reaction(APPROVE_SIGN)
@@ -400,5 +404,13 @@ async def on_raw_reaction_add(payload):
     await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL)).send(
       "> <@%s> Due to some reasons, your post is not accepted! Sorry... %s" % (message_artwork.author.id, message_artwork.jump_url),
     )
+
+    player.move_message_id_across_types(
+      message_approve_artwork_id, 
+      GSHEET_WEEKLYPROMPT_COLUMN_PENDING_APPROVAL, 
+      GSHEET_WEEKLYPROMPT_COLUMN_REJECTED
+    )
     await message_artwork.add_reaction(NOT_APPROVE_SIGN)
     await remove_messages([message_approve_artwork])
+
+  await get_scores()

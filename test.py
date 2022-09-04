@@ -50,21 +50,26 @@ def test1():
   player.add_message_id_to_set_by_type(3434324328, GSHEET_WEEKLYPROMPT_COLUMN_REJECTED)
   player.move_message_id_across_types(3434324324, GSHEET_WEEKLYPROMPT_COLUMN_APPROVED, GSHEET_WEEKLYPROMPT_COLUMN_REJECTED)
   player.move_message_id_across_types(3434324325, GSHEET_WEEKLYPROMPT_COLUMN_APPROVED, GSHEET_WEEKLYPROMPT_COLUMN_REJECTED)
-  print(
-    player.get_weeklyprompt_scores_to_encoding()
-  )
+  # print(
+    # player.get_weeklyprompt_scores_to_encoding()
+  # )
 
-  print(
-    player.get_messages_id_lists_to_encoding()
-  )
+  # print(
+    # player.get_messages_id_lists_to_encoding()
+  # )
 
-  print(
-    player.message_id_sets
-  )
+  # print(
+    # "SUM: ", 
+    # player.get_weeklyprompt_scores_sum()
+  # )
 
-  print(
-    player.weeklyprompts_week_to_num_submitted_artworks
-  )
+  # print(
+    # player.message_id_sets
+  # )
+
+  # print(
+    # player.weeklyprompts_week_to_num_submitted_artworks
+  # )
 
   DiscordBot().update_players_to_db()
 

@@ -25,7 +25,7 @@ from config_loader import (
 	ART_FIGHT_MODE_INKTOBER,
 	ART_FIGHT_MODE_WAIFUWARS,
 )
-from utils.constants import ART_FIGHT_MODE_WEEKLY_PROMPTS, ART_FIGHT_STATE, BOT_USERNAME, EXTRAVAGANZA_ROLE
+from utils.constants import ART_FIGHT_MODE_WEEKLY_PROMPTS, ART_FIGHT_STATE, BOT_USERNAME, DISCORD_GUILD, EXTRAVAGANZA_ROLE
 from utils.utils import (
 	get_day_from_message,
 	get_num_days_away,
@@ -44,6 +44,7 @@ def register_events():
 	bot = DiscordBot().bot
 	@bot.event
 	async def on_ready():
+		DiscordBot().set_up_after_run()
 		print("[INFO] Ready!")
 		await DiscordBot().bot.user.edit(username=os.getenv(BOT_USERNAME))
 		guild = DiscordBot().get_guild(None)
@@ -58,7 +59,7 @@ def register_events():
 			# print(guild.roles)
 
 		print(f'{bot.user} has connected to Discord!')
-		print(os.getenv(ART_FIGHT_STATE))
+		#print(os.getenv(ART_FIGHT_STATE))
 
 		if os.getenv("ENV") == "production":
 			bot.loop.create_task(birthday_task())
@@ -81,7 +82,7 @@ def register_events():
 	async def export(ctx, channel: str, dd_begin: int, mm_begin: int, dd_end: int, mm_end: int, year=None):
 		global df
 
-		print(",", year, ",")
+		#print(",", year, ",")
 
 		if year is None:
 			year = datetime.datetime.today().year
@@ -118,10 +119,14 @@ def register_events():
 		help='Kick all participants with the role: Extravaganza 2022 Participant'
 	)
 	async def ex2020_kick_participants(ctx):
-		guild = DiscordBot().get_guild(GUILD)
+		guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
 		for member in guild.members:
-			if member.roles[1].name == EXTRAVAGANZA_ROLE:
-				await guild.kick(member, reason = "Thank you for joining Extravaganza 2022! Hope it has been fun for you :)") 
+			if ( 
+				len(list(filter(lambda role: role.name == EXTRAVAGANZA_ROLE, member.roles))) > 0 \
+				and len(list(filter(lambda role: role.name == 'Member', member.roles))) == 0
+			):
+				print("kick: ", member.name)
+				#await guild.kick(member, reason = "Thank you for joining our NUSCAS Palette Discord! Hope it has been fun for you :)") 
 
 	@bot.command(
 		name='ex2022_set_new_invite', 

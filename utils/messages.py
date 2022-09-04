@@ -8,7 +8,7 @@ Good Morning {{role}}! This week's prompt(s) is ...
 
 **Scores!**
 {{#scores}}
-Rank {{id}} {{emoji}} .... [Score: {{score}}] {{name}} 
+**Rank {{id}}** {{emoji}} .... [Score: {{score}}] {{name}} 
 {{/scores}}
 """
 
@@ -16,7 +16,7 @@ MESSAGE_APPROVE_ARTWORK = """
 Theme: 
 {{#prompts}} 
 {{emoji}} **{{prompt}}**
-{{/prompts}}. 
+{{/prompts}}
 
 Approve this post? {{jumpUrl}}
 """
@@ -32,15 +32,26 @@ This week’s prompts are:
 {{id}} ... {{emoji}} **{{prompt}}**!
 {{/prompts}}
 
-**Once again, the template for submissions is:**
-*__IGNORE THE < >__*
+**Note! The template for submissions is:**
 ```
-Week: < Number, i.e 5 >
-Prompt: < Number, i.e 1 >
+@Palettober           --- You need to tag the bot
+Week: 1               --- Give the week number
+Prompt: 2             --- Give the prompt number
 ```
-Each person can submit up to 2 works for each prompt! You can also use more than 1 prompt in your drawing ^o^
-Submissions for this week’s prompts are open till **this Sunday, 2359**.
-Looking forward to everyone’s submissions!! ٩(◕‿◕｡)۶ 
+or...
+```
+@Palettober
+Week: 1
+Prompt: 2, 3          --- To target multiple prompts, seperate by space or comma
+```
+***Note: ***
+1. Each person can submit up to 2 works for each prompt! 
+2. You can also use more than 1 prompt in your drawing ^o^
+3. You can draw towards the prompts of the previous weeks! Just remember to input the correct prompt number.
+4. Submissions for this week’s prompts are open till **this Sunday, 2359**.
+5. You should receive a receipt within 20 seconds of uploading your artwork. If it does not appear, please try to upload again.
+
+***Looking forward to everyone’s submissions!! ٩(◕‿◕｡)۶ *** 
 """
 
 MESSAGE_WEEKLYPROMPT_WRONG_REQUEST_INPUT =  """

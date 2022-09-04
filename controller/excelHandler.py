@@ -380,11 +380,11 @@ def get_fuzzily_discord_handle(discord_name, member_df, get_uid = False):
         #     continue
         try:
             if re.match(r'.+\#[0-9]{4}', discord_name):
-                if similar_in_num(row["Discord"], discord_name) == 1 or similar_in_name(row["Discord"], discord_name) > 0.7:
+                if similar_in_name(row["Discord"], discord_name) >= 0.95 and similar_in_num(row["Discord"], discord_name) == 1:
                     success_flag = True
                     break
             else:
-                if similar_in_name(row["Discord"], discord_name) > 0.7:
+                if similar_in_name(row["Discord"], discord_name) >= 0.95:
                     success_flag = True
                     break
         except Exception as err:
