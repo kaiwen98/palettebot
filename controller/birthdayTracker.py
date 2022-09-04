@@ -35,6 +35,7 @@ from controller.excelHandler import (
 from controller.commons import get_list_of_artists
 from utils.constants import (
   BIRTHDAY_REPORT_CHANNEL,
+  DEFAULT_COLUMN_DATA,
   DELAY,
   DIR_OUTPUT, 
   DISCORD_CHANNEL_ART_GALLERY,
@@ -44,6 +45,7 @@ from utils.constants import (
   GSHEET_BIRTHDAY_COLUMN_STATE,
   GSHEET_COLUMN_BIRTHDAY,
   GSHEET_COLUMN_DISCORD,
+  GSHEET_COLUMN_DISCORD_ID,
   MEMBER_ROLE,
   PATH_IMG_BIRTHDAY,
   PATH_IMG_BIRTHDAY_1WEEK,
@@ -58,6 +60,7 @@ from utils.utils import (
   get_today_date, 
   remove_messages
 )
+import pandas as pd
 
 async def birthday_task():
   """
@@ -70,6 +73,7 @@ async def birthday_task():
   print("Starting Birthday Applet...")
   while True:
     # try:
+    
     await handle_check_birthdates_and_give_shoutout()
     # except Exception as e:
     #     await channel.send(
@@ -85,31 +89,24 @@ async def handle_check_birthdates_and_give_shoutout():
   """
   has_sent_bday_pic = False
   has_sent_week_pic = False
-  member_info = set_up_member_info()
+  is_changed = False
 
   guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
 
-  df_discord_members = pd.DataFrame({
-    "Discord": [member.name + "#" + str(member.discriminator) for member in guild.members],
-    "uid" : [member.id for member in guild.members],
-  })
-
-  print(df_discord_members)
 
   channel = DiscordBot().get_channel(guild, os.getenv(BIRTHDAY_REPORT_CHANNEL))
 
-  for index, row in member_info.iterrows():
-    if get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members, get_uid=True) is None:
+  for player in DiscordBot().players.values():
+    birthday = player[GSHEET_COLUMN_BIRTHDAY]
+    if pd.isnull(birthday):
       continue
 
     try:
-      if get_num_days_away(row[GSHEET_COLUMN_BIRTHDAY].date()) == 0 and \
-          (int(row[GSHEET_COLUMN_BIRTHDAY]) != STATE_SHOUTOUT_DAY):
-        # Birthday is today,
-        if get_num_days_away(row[GSHEET_COLUMN_DISCORD]) is None: 
-          return
+      if get_num_days_away(birthday.date()) == 0 and \
+          (player[GSHEET_BIRTHDAY_COLUMN_STATE] != STATE_SHOUTOUT_DAY):
 
-        elif has_sent_bday_pic is False:
+        # Birthday is today,
+        if has_sent_bday_pic is False:
           await channel.send(
             file = discord.File(PATH_IMG_BIRTHDAY)
           )  
@@ -118,14 +115,14 @@ async def handle_check_birthdates_and_give_shoutout():
 
           await channel.send(
             "Birthday baby sighted! :mag_right: :mag_right: HAPPY BIRTHDAY <@%s> :birthday: :candle: :birthday: :candle:" % \
-            (get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members, get_uid=True)),
+            (player[GSHEET_COLUMN_DISCORD_ID]),
           )  
 
-          member_info.at[index, GSHEET_BIRTHDAY_COLUMN_STATE] = STATE_SHOUTOUT_DAY
+          player[GSHEET_BIRTHDAY_COLUMN_STATE] = STATE_SHOUTOUT_DAY
 
-        elif get_num_days_away(row[GSHEET_COLUMN_DISCORD].date()) <= 7 and \
-          get_num_days_away(row[GSHEET_COLUMN_DISCORD].date()) > 0 and \
-          (int(row[GSHEET_COLUMN_DISCORD]) != STATE_SHOUTOUT_WEEK):
+        elif get_num_days_away(birthday.date()) <= 7 and \
+          get_num_days_away(birthday.date()) > 0 and \
+          (player[GSHEET_BIRTHDAY_COLUMN_STATE] != STATE_SHOUTOUT_WEEK):
           # Birthday is a week away,
 
           if has_sent_week_pic is False:
@@ -136,16 +133,15 @@ async def handle_check_birthdates_and_give_shoutout():
 
             await channel.send(
               "<@%s> 's birthday is less than a week away! Are yall excited :))) :eyes: :eyes: :eyes:" % \
-              (get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members, get_uid=True)),
+              (player[GSHEET_COLUMN_DISCORD_ID]),
             )  
-            member_info.at[index, GSHEET_BIRTHDAY_COLUMN_STATE] = STATE_SHOUTOUT_WEEK
+            player[GSHEET_BIRTHDAY_COLUMN_STATE] = STATE_SHOUTOUT_WEEK
 
-          elif datetime.now().day == 1 and datetime.now().month == 1:
-            member_info[GSHEET_BIRTHDAY_COLUMN_STATE] = [STATE_NO_SHOUTOUTS for i in range(member_info.shape[0])]
+        elif datetime.now().day == 1 and datetime.now().month == 1:
+          # Reset
+          player[GSHEET_BIRTHDAY_COLUMN_STATE] = STATE_NO_SHOUTOUTS    
+
     except:
       print("Date not valid.")
 
-    #print(member_info)
-    update_birthday_state_to_gsheets(member_info)
-
-
+    DiscordBot().update_players_to_db()

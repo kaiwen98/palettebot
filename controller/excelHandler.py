@@ -29,6 +29,7 @@ spreadsheet = None
 # https://docs.google.com/spreadsheets/d/{{DOCID}}
 
 from utils.constants import (
+    DEFAULT_COLUMN_DATA,
     DEFAULT_INKTOBER_STATE_DATA,
     DEFAULT_MESSAGES_DATA,
     DEFAULT_WEEKLYPROMPT_STATE_DATA,
@@ -38,6 +39,7 @@ from utils.constants import (
     DOCID_PALETTE_PARTICULARS_SURVEY,
     DOCID_WEEKLYPROMPTS_TRACKER,
     DOCID_BIRTHDAY_TRACKER,
+    GSHEET_BIRTHDAY_COLUMN_STATE,
     GSHEET_BIRTHDAY_COLUMNS,
     GSHEET_COLUMN_BIRTHDAY,
     GSHEET_COLUMN_DISCORD_ID,
@@ -52,13 +54,15 @@ from utils.constants import (
     GSHEET_WEEKLYPROMPT_COLUMNS,
     GSHEET_WEEKLYPROMPT_COLUMNS_MESSAGE_STATES,
     NUM_DAYS,
-    NUM_WEEKS
+    NUM_WEEKS,
+    STATE_NO_SHOUTOUTS
 )
 
 PATH_TO_CREDENTIALS = "./cred/gsheets/credentials_excel.json"
 
 qn_to_colnames = {
     "Birthday (DDMMYYYY)" : "Birthday",
+    "Birthday (YYYY-MM-DD)": "Birthday",
     "Timestamp" : "Timestamp",
     "Disclaimer: I am willing to have my artwork posted in #session and #art-gallery, to be put up in NUS Palette Instagram.  " : "ArtPostOk",
     "Please fill in your full name!" : "Name",
@@ -97,6 +101,17 @@ def get_member_info_from_gsheets():
 
     return sheet.reset_index(drop=True)
 
+
+def transform_df_birthday_column(df):
+    """ Used to handle automated birthday celebrations.
+    """
+    df[GSHEET_COLUMN_BIRTHDAY] = df[GSHEET_COLUMN_BIRTHDAY].transform(lambda x: '0'+ x if len(x) < 8 else x)
+    df[GSHEET_COLUMN_BIRTHDAY] = pd \
+        .to_datetime(df[GSHEET_COLUMN_BIRTHDAY], format='%Y-%m-%d', errors='coerce')     
+    #print(df[GSHEET_COLUMN_BIRTHDAY])
+
+    return df.reset_index(drop=True)
+
 def get_player_from_gsheets():
     """ Used to handle Inktober state persistence.
     """
@@ -120,10 +135,14 @@ def get_player_from_gsheets():
             .replace(r'^\s*$', np.nan, regex=True) \
             .fillna(DEFAULT_MESSAGES_DATA)
 
+    sheet[GSHEET_BIRTHDAY_COLUMN_STATE] = sheet[GSHEET_BIRTHDAY_COLUMN_STATE] \
+        .replace(r'^\s*$', np.nan, regex=True) \
+        .fillna(STATE_NO_SHOUTOUTS)
+
     for column in GSHEET_PLAYER_COLUMNS:
         sheet[column] = sheet[column] \
             .replace(r'^\s*$', np.nan, regex=True) \
-            .fillna('')
+            .fillna(DEFAULT_COLUMN_DATA)
 
     return sheet.reset_index(drop=True)
 
@@ -187,7 +206,7 @@ def update_columns_to_gsheets(input_df, doc_id, column_names, name_dict=None):
     #print("COL: ", column_names)
 
     for id, worksheet in enumerate(worksheets, start = 1):
-        print("Updating worksheet: ", worksheet.title)
+        print("[INFO] Updating worksheet: ", worksheet.title)
         input_df = correct_df_header(input_df, name_dict = name_dict)
 
         #print(input_df.iloc[offset:])
@@ -207,9 +226,9 @@ def update_columns_to_gsheets(input_df, doc_id, column_names, name_dict=None):
             # print(input_df.iloc[offset : ][GSHEET_COLUMN_DISCORD_ID])
             # print(temp_df[GSHEET_COLUMN_DISCORD_ID])
             # print(output_df[
-                # ~output_df.iloc[offset : ][GSHEET_COLUMN_DISCORD_ID].isin(
-                    # temp_df[GSHEET_COLUMN_DISCORD_ID].values.tolist()
-                # )
+            # ~output_df.iloc[offset : ][GSHEET_COLUMN_DISCORD_ID].isin(
+            # temp_df[GSHEET_COLUMN_DISCORD_ID].values.tolist()
+            # )
             # ].columns)
 
             # Filters out names which are already present in the preceding worksheeets
@@ -246,7 +265,7 @@ def update_columns_to_gsheets(input_df, doc_id, column_names, name_dict=None):
     for id, value in enumerate(dfs_to_update):
         worksheets[id].update([column_names] + value)
     print("Done upload!")
- 
+
 """
 Unspool the Dataframe and populate along the numerous worksheets in the specified spreadsheet.
 """

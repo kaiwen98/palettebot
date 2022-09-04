@@ -79,7 +79,8 @@ async def task():
     
 
 async def get_scores(is_command = False):
-
+  # Pull changes from Gsheets
+  #DiscordBot().set_up_after_run()
   # Ensures that the score report is only posted once a day, or when the bot restarts.
   if (not is_command) and is_done_this_day():
     return
@@ -102,6 +103,7 @@ async def get_scores(is_command = False):
       pystache.render(
         MESSAGE_WEEKLYPROMPT_WEEK_MESSAGE,
         {
+          "bot_name": DiscordBot().bot.user.display_name,
           "week": today_week,
           "prompts": [
             {
@@ -212,6 +214,10 @@ async def on_message(message):
       return await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL)).send(
         f"<@{message.author.id}> ** You cannot choose a week before week 3... **"
       )
+    elif week_to_approve < get_today_week():
+      return await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL)).send(
+        f"<@{message.author.id}> ** You cannot choose a week before the current week... **"
+      )
 
     prompt_ids = [int(i) for i in message_payload["prompt"]]
     
@@ -260,7 +266,7 @@ async def on_message(message):
     week = get_today_week()
     player = DiscordBot().players[str(message.author.id)]
 
-    if player.get_weeklyprompt_scores_at_week(week) > WEEKLYPROMPTS_UPLOAD_LIMIT:
+    if player.get_weeklyprompt_scores_at_week(week) >= WEEKLYPROMPTS_UPLOAD_LIMIT:
       return await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL)).send(
         "You have already been credited the maximum score for the week!"
       )
@@ -413,4 +419,4 @@ async def on_raw_reaction_add(payload):
     await message_artwork.add_reaction(NOT_APPROVE_SIGN)
     await remove_messages([message_approve_artwork])
 
-  await get_scores()
+  DiscordBot().sync_db()

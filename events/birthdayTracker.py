@@ -10,11 +10,12 @@ from controller.excelHandler import (
   set_up_member_info,
   update_birthday_state_to_gsheets
 )
-from utils.constants import DISCORD_GUILD, GSHEET_COLUMN_BIRTHDAY, GSHEET_COLUMN_DISCORD
+from utils.constants import DEFAULT_COLUMN_DATA, DISCORD_GUILD, GSHEET_BIRTHDAY_COLUMN_STATE, GSHEET_COLUMN_BIRTHDAY, GSHEET_COLUMN_DISCORD, STATE_NO_SHOUTOUTS
 
 from utils.utils import (
   get_day_from_message,
-  get_num_days_away
+  get_num_days_away,
+  get_today_datetime
 )
 
 import datetime
@@ -34,6 +35,7 @@ def register_events():
   async def change_bd_delay(ctx, delay):
     guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
     channel = DiscordBot().get_channel(guild, "bot-spam");
+    DiscordBot().update_delay = delay
     await channel.send(
       "```Delay Change Complete!```"
     )
@@ -44,36 +46,31 @@ def register_events():
   )
   async def get_month_birthdays(ctx):
     output = []
-    member_info = set_up_member_info()
     guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
     channel = DiscordBot().get_channel(guild, "bot-spam")
-    df_discord_members = pd.DataFrame({
-      "Discord": [i.name + "#" + str(i.discriminator) for i in guild.members],
-      "uid" : [i.id for i in guild.members],
-    })
-    for index, row in member_info.iterrows():
+    for player in DiscordBot().players.values():
       try:
-
-        if get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members) is None:
+        birthday = player[GSHEET_COLUMN_BIRTHDAY]
+        if pd.isnull(birthday):
           continue
 
-        if row[GSHEET_COLUMN_BIRTHDAY].date().month == (datetime.datetime.now() + datetime.timedelta(hours = 8)).date().month:
+        if player[GSHEET_COLUMN_BIRTHDAY].date().month == get_today_datetime().date().month:
           output.append("%s | %s | %s\n " % (
             # Discord name
-            get_fuzzily_discord_handle(row[GSHEET_COLUMN_DISCORD], df_discord_members), 
+            player[GSHEET_COLUMN_DISCORD], 
             # Month and date
-            datetime.datetime.strftime(row[GSHEET_COLUMN_BIRTHDAY], "%m-%d"),
+            datetime.datetime.strftime(birthday, "%m-%d"),
             # Number of days away
-            get_num_days_away(row[GSHEET_COLUMN_BIRTHDAY].date())
+            get_num_days_away(birthday)
           ))
 
       except Exception as e:
         output = ["Something went wrong"]
         continue
 
-      await ctx.send(
-        "```" + "".join(output) + "```"
-      )
+    await ctx.send(
+      "```" + "".join(output) + "```"
+    )
 
   @bot.command(
     name='bd_forgetshoutouts', 
@@ -84,12 +81,14 @@ def register_events():
 
     guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
     channel = DiscordBot().get_channel(guild, "bot-spam")
-    
+
     # reset all birthday wishing state to none
-    member_info[MEMBER_INFO_BIRTHDAY_STATE] = [STATE_NO_SHOUTOUTS for i in range(member_info.shape[0])]
+    for player in DiscordBot().players.values():
+      player[GSHEET_BIRTHDAY_COLUMN_STATE] = STATE_NO_SHOUTOUTS
     await channel.send(
       "```The Bot has forgotten when shoutouts were made!```"
     )
-    update_birthday_state_to_gsheets(member_info)
+
+    DiscordBot().update_players_to_db()
 
 

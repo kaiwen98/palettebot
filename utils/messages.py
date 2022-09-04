@@ -1,11 +1,4 @@
 MESSAGE_WEEKLYPROMPT_SCORE_MESSAGE = """
-**Your friendly {{game}} announcement!**
-Good Morning {{role}}! This week's prompt(s) is ...  
-
-{{#prompts}}
-{{id}} ... {{emoji}} {{prompt}}!
-{{/prompts}}
-
 **Scores!**
 {{#scores}}
 **Rank {{id}}** {{emoji}} .... [Score: {{score}}] {{name}} 
@@ -34,21 +27,22 @@ This week’s prompts are:
 
 **Note! The template for submissions is:**
 ```
-@Palettober           --- You need to tag the bot
+@{{bot_name}}         --- You need to tag the bot
 Week: 1               --- Give the week number
 Prompt: 2             --- Give the prompt number
 ```
 or...
 ```
-@Palettober
+@{{bot_name}}
 Week: 1
 Prompt: 2, 3          --- To target multiple prompts, seperate by space or comma
 ```
+**Note that the bot needs to be tagged (Blue Highlight); Plaintext may not work!**
 ***Note: ***
-1. Each person can submit up to 2 works for each prompt! 
+1. Each person can submit up to 2 works for each week! 
 2. You can also use more than 1 prompt in your drawing ^o^
-3. You can draw towards the prompts of the previous weeks! Just remember to input the correct prompt number.
-4. Submissions for this week’s prompts are open till **this Sunday, 2359**.
+3. You can draw towards the prompts of the previous weeks! Just remember to indicate the right week number and corresponding prompt number.
+4. Submissions for this week’s prompts are open till **this Sunday, 2359**, to be counted towards this week's scoreboard.
 5. You should receive a receipt within 20 seconds of uploading your artwork. If it does not appear, please try to upload again.
 
 ***Looking forward to everyone’s submissions!! ٩(◕‿◕｡)۶ *** 

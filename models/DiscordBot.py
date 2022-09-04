@@ -2,7 +2,8 @@ from numpy import empty
 from discord.utils import get
 from controller.excelHandler import (
   get_fuzzily_discord_handle,
-  get_player_from_gsheets, 
+  get_player_from_gsheets,
+  transform_df_birthday_column, 
   update_columns_to_gsheets
 )
 from models.Player import Player
@@ -70,6 +71,30 @@ class DiscordBot(metaclass=Singleton):
     self.bot.run(self.token)
 
   """
+  Runs coroutine to sync db
+  """
+
+  async def task(self):
+    print("Starting Gsheet update task...")
+
+    while True:
+      # Sleep
+      await asyncio.sleep(self.update_delay)
+      self.sync_db()
+
+
+  def sync_db(self):
+      # Crawls for new players to append to df
+      self.update_new_players()
+
+      # Update all player data to DB
+      # self.update_players_to_db()
+
+      #print("Gsheet updated")
+
+
+
+  """
   Some utilities are only accessible after the bot is running.
   Therefore, the remaining setup that is applicable will run in the ready hook.
   """
@@ -87,16 +112,18 @@ class DiscordBot(metaclass=Singleton):
   """
   From the master tracker sheet, populate the player information.
   """
-  def initialize_players_from_master_tracker(self):
+  def initialize_players_from_master_tracker(self, isFirstCalled=True):
     print("[INFO] Extracting from google sheet...")
     df = get_player_from_gsheets()
 
     # Populate the unidentified discord members into the last worksheet.
     print("[INFO] Getting unrecorded members...")
     self.players_df = self.get_appended_unrecorded_members(df)
+    # Process text to datetime
+    self.players_df = transform_df_birthday_column(self.players_df)
 
     print("[INFO] Initialising members...")
-    self.initialize_players(self.players_df)
+    self.initialize_players(self.players_df, isFirstCalled)
 
     print("[INFO] Populating approve queue...")
     for player in self.players.values():
@@ -107,11 +134,12 @@ class DiscordBot(metaclass=Singleton):
       #print(self.approve_queue)
 
   def update_new_players(self):
-    df = self.get_players_df_from_players()
+    self.initialize_players_from_master_tracker(False)
+    # df = self.get_players_df_from_players()
 
-    # Populate the unidentified discord members into the last worksheet.
-    self.players_df = self.get_appended_unrecorded_members(df)
-    self.initialize_players(self.players_df, False)
+    # # Populate the unidentified discord members into the last worksheet.
+    # self.players_df = self.get_appended_unrecorded_members(df)
+    # self.initialize_players(self.players_df, False)
 
 
   def initialize_players(self, df, isFirstCalled=True):
@@ -149,8 +177,8 @@ class DiscordBot(metaclass=Singleton):
       = df[GSHEET_COLUMN_DISCORD].apply(lambda x: self.get_discord_handle(x) or '')
     list_of_recorded_members_discord_ids = df[GSHEET_COLUMN_DISCORD_ID].values.tolist()
     list_of_discord_members_discord_ids = self.df_discord_members["uid"].values.tolist()
-    print(list_of_recorded_members_discord_ids)
-    print(list_of_discord_members_discord_ids)
+    # print(list_of_recorded_members_discord_ids)
+    # print(list_of_discord_members_discord_ids)
 
     # Find set of members who are not recorded in the form.
     set_of_unrecorded_members_discord_ids = set(list_of_discord_members_discord_ids) \
@@ -163,12 +191,12 @@ class DiscordBot(metaclass=Singleton):
     # print(self.df_discord_members.iloc[0]["uid"])
     # print(type(list(set_of_unrecorded_members_discord_ids)[0]))
     # print(list(set_of_unrecorded_members_discord_ids)[0])
-    print(list(set_of_unrecorded_members_discord_ids))
-    print(
-      self.df_discord_members[
-          self.df_discord_members["uid"] == str(230877459401277441)
-        ].iloc[0]["Discord"]
-    )
+    #print(list(set_of_unrecorded_members_discord_ids))
+    # print(
+      # self.df_discord_members[
+          # self.df_discord_members["uid"] == str(230877459401277441)
+        # ].iloc[0]["Discord"]
+    # )
     src_unrecorded_members = list(map(
       lambda member_id: {
         **{k: '' for k in GSHEET_PLAYER_COLUMNS},
@@ -217,34 +245,25 @@ class DiscordBot(metaclass=Singleton):
       self.players.values()
     ))
 
-    self.players_df = pd.concat(dataframes, axis=0)
-    return self.players_df
+    self.players_df_new = pd.concat(dataframes, axis=0)
 
-  def update_players_to_db(self):
-    self.get_players_df_from_players()
+    if self.players_df_new.equals(self.players_df):
+      return False
+    self.players_df = self.players_df_new
+    return True
+
+  def update_players_to_db(self, lazy_load=True):
+    # If the produced dataframe is different from the previous, update to db.
+    if not self.get_players_df_from_players() and lazy_load:
+      print("[INFO] No change in player df. Skipping update.")
+      return
+
     update_columns_to_gsheets(
       input_df=self.players_df,
       doc_id=os.getenv(DOCID_MASTER_TRACKER),
       name_dict=None,
       column_names=GSHEET_PLAYER_COLUMNS
     )
-
-  async def task(self):
-    print("Starting Gsheet update task...")
-
-    while True:
-      # Sleep
-      await asyncio.sleep(self.update_delay)
-
-      # Crawls for new players to append to df
-      self.update_new_players()
-
-      # Update all player data to DB
-      self.update_players_to_db()
-
-      print("Gsheet updated")
-
-
 
   def get_guild(self, guild_name=None):
     #print(DISCORD_GUILD)

@@ -1,3 +1,4 @@
+from pandas._libs import NaTType
 from utils.constants import (
   ART_FIGHT_MODE_INKTOBER,
   ART_FIGHT_MODE_WAIFUWARS,
@@ -22,6 +23,9 @@ from utils.constants import (
   NUM_WEEKS,
   PAYLOAD_PARAMS,
 )
+
+import datetime
+import pandas as pd
 
 import json
 
@@ -62,6 +66,12 @@ class Player():
     # Configure message states
     for type in GSHEET_COLUMNS_MESSAGE_STATES:
       self.set_messages_id_lists_by_encoding(type, messages[type])
+
+  def __getitem__(self, key):
+    return self.attributes[key]
+
+  def __setitem__(self, key, value):
+    self.attributes[key] = value
 
   """
   WeeklyPrompts
@@ -176,6 +186,10 @@ class Player():
     output_df_row[GSHEET_WEEKLYPROMPT_COLUMN_STATE] = self.get_weeklyprompt_scores_to_encoding()
     output_df_row[GSHEET_INKTOBER_COLUMN_STATE] = self.get_inktober_scores_to_encoding()
 
+    # Convert timestamp back to string
+    output_df_row[GSHEET_COLUMN_BIRTHDAY] = '' \
+      if pd.isnull(self[GSHEET_COLUMN_BIRTHDAY]) \
+      else self[GSHEET_COLUMN_BIRTHDAY].strftime('%Y-%m-%d')
     return output_df_row
 
   """

@@ -6,6 +6,14 @@ from utils.constants import GSHEET_WEEKLYPROMPT_COLUMN_APPROVED, GSHEET_WEEKLYPR
 from utils.utils import get_file_path, get_rank_emoji, get_week_from_datetime
 from controller.excelHandler import get_weeklyprompts_from_gsheets, update_birthday_state_to_gsheets, update_weeklyprompt_state_to_gsheets
 
+def test3():
+  print("Starting update players...")
+  DiscordBot().update_new_players()
+  print("Starting syncing db...")
+  DiscordBot().update_players_to_db(lazy_load=False)
+  DiscordBot().update_players_to_db(lazy_load=True)
+
+
 def test2():
   from utils.messages import (
     MESSAGE_WEEKLYPROMPT_SCORE_MESSAGE
@@ -125,7 +133,7 @@ if __name__ == "__main__":
   @bot.event
   async def on_ready():
     DiscordBot().set_up_after_run()
-    test1()
+    test3()
     #test2()
 
   DiscordBot().run()

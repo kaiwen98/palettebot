@@ -29,6 +29,7 @@ from utils.constants import ART_FIGHT_MODE_WEEKLY_PROMPTS, ART_FIGHT_STATE, BOT_
 from utils.utils import (
 	get_day_from_message,
 	get_num_days_away,
+	get_today_datetime,
 )
 
 import datetime
@@ -74,6 +75,12 @@ def register_events():
 		bot.loop.create_task(DiscordBot().task())
 
 
+	@bot.command(
+		name='get_sys_datetime',
+		help='Help to print system datetime for debugging.'
+	)
+	async def get_sys_datetime(ctx):
+		await ctx.send(f"```{get_today_datetime()}```")
 
 	@bot.command(
 		name='export', 
@@ -126,7 +133,7 @@ def register_events():
 				and len(list(filter(lambda role: role.name == 'Member', member.roles))) == 0
 			):
 				print("kick: ", member.name)
-				#await guild.kick(member, reason = "Thank you for joining our NUSCAS Palette Discord! Hope it has been fun for you :)") 
+				await guild.kick(member, reason = "Thank you for joining our NUSCAS Palette Discord! Hope it has been fun for you :)") 
 
 	@bot.command(
 		name='ex2022_set_new_invite', 
