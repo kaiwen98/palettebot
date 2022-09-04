@@ -56,7 +56,7 @@ def get_today_datetime():
   # SGT = UTC + 8hrs
   output_datetime = datetime.now() + (
     timedelta(
-      hours = 8 if os.getenv(ENV) == 'production' else 0
+      hours = 8 if os.getenv(ENV) != 'local' else 0
     )   
   )
   return output_datetime
