@@ -21,7 +21,7 @@ def register_events():
   )
 
   async def weekp_get_scores(ctx):
-    await weekp.get_scores(True)
+    await weekp.get_scores()
 
   @bot.command(
     name='weekp_credit_score', 
@@ -34,4 +34,5 @@ def register_events():
     player = DiscordBot().players[discord_id]
     player.increment_weeklyprompt_score_at_week(int(week), int(score))
     await ctx.send(json.dumps(player.weeklyprompts_week_to_num_submitted_artworks))
+    await DiscordBot().update_players_to_db()
     #await weekp.get_scores(True)

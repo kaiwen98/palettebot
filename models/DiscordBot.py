@@ -61,7 +61,7 @@ class DiscordBot(metaclass=Singleton):
     self.invite_links = {}
     self.extravaganza_invite_link = None
     self.players: dict[str, Player] = {}
-    self.update_delay = 10
+    self.update_delay = 60
     self.players_df = None
 
   """
@@ -87,7 +87,6 @@ class DiscordBot(metaclass=Singleton):
       # Crawls for new players to append to df
     async with asyncio.Lock():
       await self.update_new_players()
-      await DiscordBot().sync_db()
 
       # Update all player data to DB
       # self.update_players_to_db()
@@ -260,7 +259,7 @@ class DiscordBot(metaclass=Singleton):
 
     async with asyncio.Lock():
       if not self.get_players_df_from_players() and lazy_load:
-        print("[INFO] No change in player df. Skipping update.")
+        #print("[INFO] No change in player df. Skipping update.")
         return
 
     update_columns_to_gsheets(

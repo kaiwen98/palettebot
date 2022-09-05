@@ -1,14 +1,14 @@
 MESSAGE_WEEKLYPROMPT_SCORE_MESSAGE = """
 **Scores!**
 {{#scores}}
-**Rank {{id}}** {{emoji}} .... [Score: {{score}}] {{name}} 
+**Rank {{id}}** {{{emoji}}} .... [Score: {{score}}] {{name}} 
 {{/scores}}
 """
 
 MESSAGE_APPROVE_ARTWORK = """
 Theme: 
 {{#prompts}} 
-{{emoji}} **{{prompt}}**
+{{{emoji}}} **{{prompt}}**
 {{/prompts}}
 
 Approve this post? {{jumpUrl}}
@@ -22,7 +22,7 @@ Hi everyone! Thank you for the submissions so far (((o(°▽°)o)))
 This week’s prompts are: 
 
 {{#prompts}}
-{{id}} ... {{emoji}} **{{prompt}}**!
+{{id}} ... {{{emoji}}} **{{prompt}}**!
 {{/prompts}}
 
 **Note! The template for submissions is:**
@@ -41,9 +41,9 @@ Prompt: 2, 3          --- To target multiple prompts, seperate by space or comma
 ***Note: ***
 1. Each person can submit up to 2 works for each week! 
 2. You can also use more than 1 prompt in your drawing ^o^
-3. You can draw towards the prompts of the previous weeks! Just remember to indicate the right week number and corresponding prompt number.
-4. Submissions for this week’s prompts are open till **this Sunday, 2359**, to be counted towards this week's scoreboard.
-5. You should receive a receipt within 20 seconds of uploading your artwork. If it does not appear, please try to upload again.
+3. Submissions for this week’s prompts are open till **this Sunday, 2359**, to be counted towards this week's scoreboard.
+4. You should receive a receipt within 20 seconds of uploading your artwork. If it does not appear, please try to upload again.
+5. Your artwork will be subjected to approval by an Exco member, to ensure fairness in crediting of scores. Only after a approval will you get a point!
 
 ***Looking forward to everyone’s submissions!! ٩(◕‿◕｡)۶ *** 
 """
@@ -66,9 +66,11 @@ MESSAGE_WEEKLYPROMPT_WRONG_WEEK = """
 
 Week {{week}} prompts:
 {{#prompts}}
-{{id}} ... {{emoji}} **{{prompt}}**!
+{{id}} ... {{{emoji}}} **{{prompt}}**!
 {{/prompts}}
 
 """
+
+MESSAGE_WEEKLYPROMPT_BLOCKED_WEEK = ":pencil2: :book: This week is break week! Focus on your exams or submissions :muscle: :muscle:"
 
 

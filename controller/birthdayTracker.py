@@ -33,6 +33,7 @@ from controller.excelHandler import (
   verify_is_okay_to_share_by_discord_name
 )
 from controller.commons import get_list_of_artists
+from utils.config_utils import is_done_this_day
 from utils.constants import (
   BIRTHDAY_REPORT_CHANNEL,
   DEFAULT_COLUMN_DATA,
@@ -46,6 +47,7 @@ from utils.constants import (
   GSHEET_COLUMN_BIRTHDAY,
   GSHEET_COLUMN_DISCORD,
   GSHEET_COLUMN_DISCORD_ID,
+  HOUR_WISH_BIRTHDAY,
   MEMBER_ROLE,
   PATH_IMG_BIRTHDAY,
   PATH_IMG_BIRTHDAY_1WEEK,
@@ -57,12 +59,13 @@ from utils.utils import (
   get_num_days_away, 
   get_rank_emoji, 
   get_timestamp_from_curr_datetime, 
-  get_today_date, 
+  get_today_date,
+  get_today_datetime, 
   remove_messages
 )
 import pandas as pd
 
-async def birthday_task():
+async def task():
   """
   Entry point to birthday logic. 
         TODO: Relocate this code to controller/birthday.py 
@@ -72,16 +75,17 @@ async def birthday_task():
 
   print("Starting Birthday Applet...")
   while True:
+    await asyncio.sleep(int(os.getenv(DELAY)) + 10)
+
+    if is_done_this_day(hour=HOUR_WISH_BIRTHDAY): 
+      continue
     # try:
-    
-    await DiscordBot().sync_db()
     await handle_check_birthdates_and_give_shoutout()
     # except Exception as e:
     #     await channel.send(
     #         "```Error occured! Contact the administrator. Message: %s```" % (str(e))
     #     )
 
-    await asyncio.sleep(int(os.getenv(DELAY)))
 
 async def handle_check_birthdates_and_give_shoutout():
   """
@@ -91,6 +95,8 @@ async def handle_check_birthdates_and_give_shoutout():
   has_sent_bday_pic = False
   has_sent_week_pic = False
   is_changed = False
+
+
 
   guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
 
@@ -145,4 +151,4 @@ async def handle_check_birthdates_and_give_shoutout():
     except:
       print("Date not valid.")
 
-    DiscordBot().update_players_to_db()
+    await DiscordBot().update_players_to_db()

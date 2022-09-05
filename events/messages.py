@@ -5,7 +5,6 @@ from models.DiscordBot import DiscordBot
 from controller import inktober as ink
 from controller import weeklyprompts as weekp
 import asyncio
-from controller.birthdayTracker import birthday_task
 from controller import waifuwars as waf
 from controller.excelHandler import (
     get_fuzzily_discord_handle,

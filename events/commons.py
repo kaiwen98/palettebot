@@ -6,9 +6,9 @@ from models.DiscordBot import DiscordBot
 from controller import inktober as ink
 from controller import waifuwars as waf
 from controller import weeklyprompts as weekp
+from controller import birthdayTracker
 
 import asyncio
-from controller.birthdayTracker import birthday_task
 from controller.commons import (
 	get_photos,
 	get_all_members_text
@@ -48,22 +48,8 @@ def register_events():
 		await DiscordBot().set_up_after_run()
 		print("[INFO] Ready!")
 		await DiscordBot().bot.user.edit(username=os.getenv(BOT_USERNAME))
-		guild = DiscordBot().get_guild(None)
 			
-		# Getting all the guilds our bot is in
-		for guild in bot.guilds:
-
-			# Adding each guild's invites to our dict
-			DiscordBot().invite_links[guild.id] = await guild.invites()
-			# print("--begin ", DiscordBot().invite_links[guild.id])
-
-			# print(guild.roles)
-
 		print(f'{bot.user} has connected to Discord!')
-		#print(os.getenv(ART_FIGHT_STATE))
-
-		if os.getenv("ENV") == "production":
-			bot.loop.create_task(birthday_task())
 
 		if os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
 			bot.loop.create_task(ink.task())
@@ -72,7 +58,8 @@ def register_events():
 		elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS:
 			bot.loop.create_task(weekp.task())
 
-		#bot.loop.create_task(DiscordBot().task())
+		bot.loop.create_task(DiscordBot().task())
+		bot.loop.create_task(birthdayTracker.task())
 
 
 	@bot.command(

@@ -44,7 +44,7 @@ from utils.constants import (
   WEEKLYPROMPTS_RECEIVE_CHANNEL,
   WEEKLYPROMPTS_UPLOAD_LIMIT
 )
-from utils.messages import MESSAGE_APPROVE_ARTWORK, MESSAGE_WEEKLYPROMPT_SCORE_MESSAGE, MESSAGE_WEEKLYPROMPT_WEEK_MESSAGE, MESSAGE_WEEKLYPROMPT_WRONG_REQUEST_INPUT, MESSAGE_WEEKLYPROMPT_WRONG_WEEK
+from utils.messages import MESSAGE_APPROVE_ARTWORK, MESSAGE_WEEKLYPROMPT_BLOCKED_WEEK, MESSAGE_WEEKLYPROMPT_SCORE_MESSAGE, MESSAGE_WEEKLYPROMPT_WEEK_MESSAGE, MESSAGE_WEEKLYPROMPT_WRONG_REQUEST_INPUT, MESSAGE_WEEKLYPROMPT_WRONG_WEEK
 from utils.utils import (
   calculate_score, 
   clear_folder, 
@@ -72,54 +72,59 @@ async def task():
     delay: int = int(os.getenv(DELAY))
     await asyncio.sleep(delay)
     # try:
-    await get_scores()
+
+    if is_done_this_week(hour=8):
+      continue
+    
+    await get_scores(is_routine=True)
     # except Exception as e:
     #     await channel.send(
     #         "```Error occured! Contact the administrator. Message: %s```" % (str(e))
     #     )
     
 
-async def get_scores(is_command = False):
+async def get_scores(is_routine=False):
   # Pull changes from Gsheets
   #DiscordBot().set_up_after_run()
   # Ensures that the score report is only posted once a day, or when the bot restarts.
-  if (not is_command) and is_done_this_week():
-    return
-
 
   guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
   #print("report getscores", os.getenv(WEEKLYPROMPTS_REPORT_CHANNEL))
   channel_to_send = DiscordBot().get_channel(
     guild, 
-    "bot-spam" if is_command else os.getenv(WEEKLYPROMPTS_REPORT_CHANNEL)
+    os.getenv(WEEKLYPROMPTS_REPORT_CHANNEL) if is_routine else "bot-spam"
   )
 
   today_week = get_today_week()
+  
+  # If week is blocked, dont show prompt
+  if today_week == -1:
+    return await channel_to_send.send(MESSAGE_WEEKLYPROMPT_BLOCKED_WEEK)
+
   prompts = WEEKLYPROMPT_DICT_WEEK_TO_PROMPT[today_week]
 
-  if not is_done_this_week(
-      hour=8
-  ):
-    message = \
-      pystache.render(
-        MESSAGE_WEEKLYPROMPT_WEEK_MESSAGE,
-        {
-          "bot_name": DiscordBot().bot.user.display_name,
-          "week": today_week,
-          "prompts": [
-            {
-              "id": id + 1,
-              "emoji": prompt.emoji,
-              "prompt": prompt.prompt
-            }
-            for id, prompt in enumerate(
-              prompts
-            )
-          ],
-        }
-      )
-    await channel_to_send.send(message)
+  # Send Weekly message
+  message = \
+    pystache.render(
+      MESSAGE_WEEKLYPROMPT_WEEK_MESSAGE,
+      {
+        "bot_name": DiscordBot().bot.user.display_name,
+        "week": today_week,
+        "prompts": [
+          {
+            "id": id + 1,
+            "emoji": prompt.emoji,
+            "prompt": prompt.prompt
+          }
+          for id, prompt in enumerate(
+            prompts
+          )
+        ],
+      }
+    )
+  await channel_to_send.send(message)
   
+  # Send score message
 
   message = \
     pystache.render(
@@ -162,6 +167,7 @@ async def get_scores(is_command = False):
   #print(message)
 
   await channel_to_send.send(message)
+
 
 """
 When you mention the bot with the inktober entry,
@@ -208,16 +214,17 @@ async def on_message(message):
     """
     Validate week
     """
-    if (week_to_approve > int(get_recorded_week())):
-      return await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL)).send(
+
+    receive_channel = DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL))
+
+    if int(get_recorded_week()) == -1:
+      return await receive_channel.send(MESSAGE_WEEKLYPROMPT_BLOCKED_WEEK)
+    elif (week_to_approve > int(get_recorded_week())):
+      return await receive_channel.send(
         f"<@{message.author.id}> ** You cannot submit into the future! **"
       )
-    elif (week_to_approve < 3):
-      return await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL)).send(
-        f"<@{message.author.id}> ** You cannot choose a week before week 3... **"
-      )
     elif week_to_approve < get_today_week():
-      return await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL)).send(
+      return await receive_channel.send(
         f"<@{message.author.id}> ** You cannot choose a week before the current week... **"
       )
 
@@ -252,8 +259,12 @@ async def on_message(message):
       return await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL)).send(
         message 
       )
+    
+    print("week: ", week_to_approve)
+    print("prompt_id: ", prompt_ids)
+    print(WEEKLYPROMPT_DICT_WEEK_TO_PROMPT)
 
-    prompts = [WEEKLYPROMPT_DICT_WEEK_TO_PROMPT[week_to_approve][prompt_id] for prompt_id in prompt_ids]
+    prompts = [WEEKLYPROMPT_DICT_WEEK_TO_PROMPT[week_to_approve][prompt_id-1] for prompt_id in prompt_ids]
       
     # if no io/ existing in the system, make io/
     if "io" not in os.listdir(os.getcwd()):

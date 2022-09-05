@@ -65,7 +65,7 @@ DELAY = "DELAY"
 DISCORD_TOKEN = "DISCORD_TOKEN"
 DISCORD_GUILD = "DISCORD_GUILD"
 
-NUM_WEEKS = 13
+NUM_WEEKS = 11
 NUM_DAYS = 31
 
 DF_ROW = 0
@@ -79,6 +79,11 @@ DEFAULT_INKTOBER_STATE_DATA = ("0;" * NUM_DAYS)[:-1]
 DEFAULT_WEEKLYPROMPT_STATE_DATA = ("0;" * NUM_WEEKS)[:-1]
 DEFAULT_MESSAGES_DATA = {}
 DEFAULT_COLUMN_DATA = ''
+
+HOUR_POST_WEEKLYPROMPT_WEEK_MESSAGE = 8
+HOUR_WISH_BIRTHDAY = 0
+
+WEEKLYTOBER_WEEKS_TO_IGNORE = [7]
 
 """
 Sheets constants
@@ -209,8 +214,8 @@ WEEKLYPROMPT_DICT_WEEK_TO_PROMPT = {
     Prompt("The Sea", ":ocean:")
   ],
   5: [
-    Prompt("Anitan Sticker Design", ":Anitanyes:"),
-    Prompt("Anikun Sticker Design", ":Anikunwink:")
+    Prompt("Anitan Sticker Design", '''<:Anitanyes:744473390999666698>'''),
+    Prompt("Anikun Sticker Design", '''<:Anikunwink:744474562913370153>''')
   ],
   6: [
     Prompt("An Anime/Manga that inspired me", ":star: :blue_book:"),
