@@ -85,7 +85,9 @@ class DiscordBot(metaclass=Singleton):
 
   async def sync_db(self):
       # Crawls for new players to append to df
+    async with asyncio.Lock():
       await self.update_new_players()
+      await DiscordBot().sync_db()
 
       # Update all player data to DB
       # self.update_players_to_db()

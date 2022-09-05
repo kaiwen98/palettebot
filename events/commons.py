@@ -45,7 +45,7 @@ def register_events():
 	bot = DiscordBot().bot
 	@bot.event
 	async def on_ready():
-		DiscordBot().set_up_after_run()
+		await DiscordBot().set_up_after_run()
 		print("[INFO] Ready!")
 		await DiscordBot().bot.user.edit(username=os.getenv(BOT_USERNAME))
 		guild = DiscordBot().get_guild(None)
@@ -72,7 +72,7 @@ def register_events():
 		elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS:
 			bot.loop.create_task(weekp.task())
 
-		bot.loop.create_task(DiscordBot().task())
+		#bot.loop.create_task(DiscordBot().task())
 
 
 	@bot.command(

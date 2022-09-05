@@ -26,6 +26,15 @@ def is_done_this_week(hour=None):
     and get_recorded_week() == \
       get_week_from_datetime(get_today_datetime())
   ):
+    print(
+      "Week: ", 
+      get_week_from_datetime(get_today_datetime())
+    )
+
+    print(
+      "Hour: ", 
+      get_today_datetime().hour
+    )
     return True
   set_recorded_week(get_week_from_datetime(get_today_datetime()))
   return False

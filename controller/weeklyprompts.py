@@ -67,6 +67,7 @@ async def task():
 
   print("[INFO] Starting WeeklyPrompt Applet...")
   while True:
+    # await DiscordBot().sync_db()
     # do something
     delay: int = int(os.getenv(DELAY))
     await asyncio.sleep(delay)
@@ -82,7 +83,7 @@ async def get_scores(is_command = False):
   # Pull changes from Gsheets
   #DiscordBot().set_up_after_run()
   # Ensures that the score report is only posted once a day, or when the bot restarts.
-  if (not is_command) and is_done_this_day():
+  if (not is_command) and is_done_this_week():
     return
 
 
@@ -97,7 +98,7 @@ async def get_scores(is_command = False):
   prompts = WEEKLYPROMPT_DICT_WEEK_TO_PROMPT[today_week]
 
   if not is_done_this_week(
-  #    hour=8
+      hour=8
   ):
     message = \
       pystache.render(
@@ -119,6 +120,7 @@ async def get_scores(is_command = False):
       )
     await channel_to_send.send(message)
   
+
   message = \
     pystache.render(
       MESSAGE_WEEKLYPROMPT_SCORE_MESSAGE,
@@ -336,7 +338,7 @@ async def on_message(message):
 
     clear_folder()
 
-    await DiscordBot().update_players_to_db()
+    #await DiscordBot().update_players_to_db()
 
   else:
     # The message might be a command. run it.
@@ -363,6 +365,7 @@ async def on_raw_reaction_add(payload):
   if len(list(filter(lambda role: role.name in ["Senpai"], approver.roles))) == 0:
     print("[ERR] Not authorised to approve!")
     return 
+
 
   try:
     approve_request_to_service = \

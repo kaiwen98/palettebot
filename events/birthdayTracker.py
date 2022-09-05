@@ -45,6 +45,7 @@ def register_events():
     help='Get all birthdays for the month'
   )
   async def get_month_birthdays(ctx):
+    await DiscordBot().sync_db()
     output = []
     guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
     channel = DiscordBot().get_channel(guild, "bot-spam")
@@ -77,6 +78,7 @@ def register_events():
     help='Forget who the bot has wished birthdays for.'
   )
   async def reset_shoutout_counter(ctx):
+    await DiscordBot().sync_db()
     member_info = set_up_member_info()
 
     guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))

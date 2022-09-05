@@ -74,6 +74,7 @@ async def birthday_task():
   while True:
     # try:
     
+    await DiscordBot().sync_db()
     await handle_check_birthdates_and_give_shoutout()
     # except Exception as e:
     #     await channel.send(
