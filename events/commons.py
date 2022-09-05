@@ -24,6 +24,8 @@ import controller.excelHandler as exc
 from config_loader import (
 	ART_FIGHT_MODE_INKTOBER,
 	ART_FIGHT_MODE_WAIFUWARS,
+	get_config_param,
+	set_config_param,
 )
 from utils.constants import ART_FIGHT_MODE_WEEKLY_PROMPTS, ART_FIGHT_STATE, BOT_USERNAME, DISCORD_GUILD, EXTRAVAGANZA_ROLE
 from utils.utils import (
@@ -35,6 +37,8 @@ from utils.utils import (
 import datetime
 
 import pandas as pd
+
+import re
 
 import config_loader as cfg
 import os
@@ -68,6 +72,16 @@ def register_events():
 	)
 	async def get_sys_datetime(ctx):
 		await ctx.send(f"```{get_today_datetime()}```")
+
+	@bot.command(
+		name="msg",
+		help="Relay message as Palettebot"
+	)
+	async def msg(ctx, channel_name):
+		channel = DiscordBot().get_channel(None, channel_name)
+		return await channel.send(re.sub(r">\s+msg\s+.*\s+", "", ctx.message.content))
+
+
 
 	@bot.command(
 		name='export', 

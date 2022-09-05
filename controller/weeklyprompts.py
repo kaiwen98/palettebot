@@ -1,7 +1,7 @@
 from datetime import datetime
 import pystache
 import os
-from config_loader import get_recorded_week
+from config_loader import GLOBAL_WEEKLYPROMPT_ISON, get_config_param, get_recorded_week
 
 from models.DiscordBot import DiscordBot
 import discord
@@ -66,7 +66,7 @@ async def task():
   # )
 
   print("[INFO] Starting WeeklyPrompt Applet...")
-  while True:
+  while get_config_param(GLOBAL_WEEKLYPROMPT_ISON):
     # await DiscordBot().sync_db()
     # do something
     delay: int = int(os.getenv(DELAY))
