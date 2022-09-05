@@ -15,8 +15,10 @@ from controller.excelHandler import (
 import datetime
 import os
 import pandas as pd
-
-import config_loader as cfg
+from config_loader import (
+    GLOBAL_WEEKLYPROMPT_ISON, 
+    get_config_param, 
+)
 from utils.constants import ART_FIGHT_MODE_INKTOBER, ART_FIGHT_MODE_WAIFUWARS, ART_FIGHT_MODE_WEEKLY_PROMPTS, ART_FIGHT_STATE
 
 
@@ -29,7 +31,7 @@ def register_events():
                 await ink.on_message(message, DiscordBot().approve_queue)
             elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WAIFUWARS:
                 await waf.on_message_waifuwars(message, DiscordBot().approve_queue)
-            elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS:
+            elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS and get_config_param(GLOBAL_WEEKLYPROMPT_ISON):
                 await weekp.on_message(message)
             elif message.channel.name == "bot-spam":
                 await bot.process_commands(message)
@@ -41,7 +43,7 @@ def register_events():
         async with asyncio.Lock():
             if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
                 await ink.on_raw_reaction_add(payload, DiscordBot().approve_queue)
-            elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS:
+            elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS and get_config_param(GLOBAL_WEEKLYPROMPT_ISON):
                 await weekp.on_raw_reaction_add(payload)
             elif ART_FIGHT_STATE == ART_FIGHT_MODE_WAIFUWARS:
                 await waf.on_raw_reaction_add(payload, DiscordBot().approve_queue)

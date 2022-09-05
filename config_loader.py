@@ -18,12 +18,13 @@ from utils.constants import (
 """
 Global variables
 """
-
+GLOBAL_WEEKLYPROMPT_ISON = "GLOBAL_WEEKLYPROMPT_ISON"
 global_config_params = {
   "GLOBAL_DATE": None,
   "GLOBAL_WEEK": None,
   "GLOBAL_DATETIME": None,
-  "GLOBAL_DELAY": None
+  "GLOBAL_DELAY": None,
+  "GLOBAL_WEEKLYPROMPT_ISON": False
 }
 
 def set_config_param(key, value):
