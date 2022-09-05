@@ -126,23 +126,7 @@ async def get_scores(is_routine=False):
   
   # Send score message
 
-  message = \
-    pystache.render(
-      MESSAGE_WEEKLYPROMPT_SCORE_MESSAGE,
-      {
-        "game": "Weekly Prompts",
-        "role": "@everyo",
-        "prompts": [
-          {
-            "id": id + 1,
-            "emoji": prompt.emoji,
-            "prompt": prompt.prompt
-          }
-          for id, prompt in enumerate(
-            prompts
-          )
-        ],
-        "scores":  sorted([
+  scores = sorted([
           {
             "id": id + 1,
             "score": player.get_weeklyprompt_scores_sum(),
@@ -159,8 +143,34 @@ async def get_scores(is_routine=False):
         ],
         # Sort score in descending order
         key=lambda x: x["score"],
+        # Sort score in descending order
         reverse=True
-        ),
+        )
+
+  scores = [{
+    **x, 
+    "id": i + 1, 
+    "emoji": get_rank_emoji(i + 1)
+  } for i, x in enumerate(scores)]
+
+
+  message = \
+    pystache.render(
+      MESSAGE_WEEKLYPROMPT_SCORE_MESSAGE,
+      {
+        "game": "Weekly Prompts",
+        "role": "@everyo",
+        "prompts": [
+          {
+            "id": id + 1,
+            "emoji": prompt.emoji,
+            "prompt": prompt.prompt
+          }
+          for id, prompt in enumerate(
+            prompts
+          )
+        ],
+        "scores":  scores,
       }
     )
 

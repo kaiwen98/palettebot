@@ -1,1 +1,1 @@
-worker: python app.py -e staging
+worker: python app.py -e production
