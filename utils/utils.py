@@ -7,7 +7,8 @@ from utils.constants import (
   DISCORD_CHANNEL_WAIFU_WARS,
   DISCORD_GUILD, 
   DISCORD_MESSAGES_LIMIT,
-  ENV
+  ENV,
+  WEEKLYTOBER_WEEKS_TO_IGNORE
 )
 
 import re
@@ -62,7 +63,18 @@ def get_today_datetime():
   return output_datetime
 
 def get_today_week():
-  return get_week_from_datetime(get_today_datetime())
+  actual_week = get_week_from_datetime(get_today_datetime())
+  output_week = -1
+  # By right, this is recess week. We need to factor that in.
+  if actual_week > 7:
+    output_week = actual_week - 1
+  elif actual_week < 7: 
+    output_week = actual_week
+  
+  if output_week in WEEKLYTOBER_WEEKS_TO_IGNORE:
+    output_week = -1
+
+  return output_week
 
 def get_num_days_away(member_date):
   dummy_member_date = datetime(

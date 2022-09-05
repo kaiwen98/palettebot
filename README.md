@@ -86,6 +86,9 @@ The project encompasses a Discord Bot which currently supports the following fea
 ## Directory overview
 1. ```Procfile```, ```runtime.txt```
     * Heroku files. Heroku is a cloud service that we use to run the script 24/7. This means no one needs to leave their computer on forever.
+1. ```.env.*```
+    * This must never be uploaded to Github. You are expected to maintain a copy of it. 
+    * The function of this
 1. ```config_loader.py```
     * If script is run from Heroku, then use actual channels for input and output. (#art-gallery, #general)
     * Else if script is run from a PC (local environment), then use test channels. (#bot-spam, #exco-chat)

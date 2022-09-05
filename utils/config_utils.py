@@ -9,23 +9,42 @@ from config_loader import (
 from utils.utils import get_today_datetime, get_week_from_datetime
 
 
-def is_done_this_day():
+def is_done_this_day(hour=None):
   if (
-      get_recorded_date() \
-      and get_recorded_date() == \
-        get_today_datetime().date()
+    get_recorded_date() == None \
+    or (
+      # This week
+      get_recorded_date() != \
+      get_today_datetime().date() 
+      # At this hour
+      and (hour is None or get_today_datetime() == hour) 
+    )
   ):
-    return True
-  set_recorded_date(get_today_datetime().date())
-  return False
+    set_recorded_date(get_today_datetime().date())
+    return False
+  return True
 
 def is_done_this_week(hour=None):
   if (
-    get_recorded_week() \
-    and hour is None or get_today_datetime().hour == hour \
-    and get_recorded_week() == \
-      get_week_from_datetime(get_today_datetime())
+    get_recorded_week() == None \
+    or (
+      # This week
+      get_recorded_week() != \
+      get_week_from_datetime(get_today_datetime()) 
+      # At this hour
+      and (hour is None or get_today_datetime() == hour) 
+    )
   ):
-    return True
-  set_recorded_week(get_week_from_datetime(get_today_datetime()))
-  return False
+    set_recorded_week(get_week_from_datetime(get_today_datetime()))
+    return False
+
+  print(
+    "Week: ", 
+    get_week_from_datetime(get_today_datetime())
+  )
+
+  print(
+    "Hour: ", 
+    get_today_datetime().hour
+  )
+  return True
