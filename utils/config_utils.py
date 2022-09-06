@@ -27,7 +27,7 @@ def is_done_this_day(hour=None):
 
 def is_done_this_week(hour=None):
   if get_recorded_week() == None:
-    set_recorded_date(get_today_datetime().date())
+    set_recorded_week(get_week_from_datetime(get_today_datetime()))
     return True
 
   if (
