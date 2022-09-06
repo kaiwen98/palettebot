@@ -1,6 +1,7 @@
 """
 Consolidates all commands that is related to the birthdayTracker.
 """
+from models.AsyncManager import AsyncManager
 from models.DiscordBot import DiscordBot
 from controller import inktober as ink
 from controller import weeklyprompts as weekp
@@ -26,7 +27,7 @@ def register_events():
     bot = DiscordBot().bot
     @bot.event
     async def on_message(message):
-        async with asyncio.Lock():
+        async with AsyncManager().lock:
             if os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
                 await ink.on_message(message, DiscordBot().approve_queue)
             elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WAIFUWARS:
@@ -40,7 +41,7 @@ def register_events():
     @bot.event
     async def on_raw_reaction_add(payload):
 
-        async with asyncio.Lock():
+        async with AsyncManager().lock:
             if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
                 await ink.on_raw_reaction_add(payload, DiscordBot().approve_queue)
             elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS and get_config_param(GLOBAL_WEEKLYPROMPT_ISON):

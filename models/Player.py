@@ -30,7 +30,8 @@ import pandas as pd
 import json
 
 class Player():
-  def __init__(self, row_from_gspread_worksheet):
+  def __init__(self, row_from_gspread_worksheet, index):
+    self.index = index
     self.attributes = row_from_gspread_worksheet
 
     self.weeklyprompts_week_to_num_submitted_artworks: dict = {
