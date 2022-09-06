@@ -1,4 +1,3 @@
-import config_loader as cfg
 import os
 from models.DiscordBot import DiscordBot
 
@@ -9,14 +8,14 @@ from events.member import register_events as register_events_member
 from events.messages import register_events as register_events_messages
 from events.waifuwars import register_events as register_events_waifuwars
 from events.weeklyprompts import register_events as register_events_weeklyprompts
-
+from config_loader import load_env_by_command_line_args
 """
     Command Handlers    
 """
 
 if __name__ == "__main__":
   # Load environment
-  cfg.load_env_by_command_line_args()
+  load_env_by_command_line_args()
   register_events_commons()
   #register_events_member()
   register_events_birthday()
