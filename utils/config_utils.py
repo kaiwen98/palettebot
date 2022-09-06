@@ -10,30 +10,32 @@ from utils.utils import get_today_datetime, get_week_from_datetime
 
 
 def is_done_this_day(hour=None):
+  if get_recorded_date() == None:
+    set_recorded_date(get_today_datetime().date())
+    return True
+
   if (
-    get_recorded_date() == None \
-    or (
-      # This week
-      get_recorded_date() != \
+    # This week
+    get_recorded_date() != \
       get_today_datetime().date() 
-      # At this hour
+    # At this hour
       and (hour is None or get_today_datetime() == hour) 
-    )
   ):
     set_recorded_date(get_today_datetime().date())
     return False
   return True
 
 def is_done_this_week(hour=None):
+  if get_recorded_week() == None:
+    set_recorded_date(get_today_datetime().date())
+    return True
+
   if (
-    get_recorded_week() == None \
-    or (
-      # This week
-      get_recorded_week() != \
+    # This week
+    get_recorded_week() != \
       get_week_from_datetime(get_today_datetime()) 
-      # At this hour
+    # At this hour
       and (hour is None or get_today_datetime() == hour) 
-    )
   ):
     set_recorded_week(get_week_from_datetime(get_today_datetime()))
     return False
