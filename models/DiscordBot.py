@@ -55,7 +55,7 @@ class DiscordBot(metaclass=Singleton):
     intents.messages = True
     intents.reactions = True
     self.token = os.getenv(DISCORD_TOKEN)
-    self.bot = discord.ext.commands.Bot(command_prefix=os.getenv(BOT_COMMAND_PREFIX), intents=intents)
+    self.bot = discord.ext.commands.Bot(command_prefix=f"{os.getenv(BOT_COMMAND_PREFIX)} ", intents=intents)
     self.approve_queue = {
       k: {} for k in ART_FIGHT_MODES
     }
@@ -86,9 +86,8 @@ class DiscordBot(metaclass=Singleton):
 
 
   async def sync_db(self):
-      # Crawls for new players to append to df
-    async with AsyncManager().lock:
-      await self.update_new_players()
+    # Crawls for new players to append to df
+    await self.update_new_players()
 
       # Update all player data to DB
       # self.update_players_to_db()
@@ -126,8 +125,8 @@ class DiscordBot(metaclass=Singleton):
     self.players_df = transform_df_birthday_column(self.players_df)
 
     print("[INFO] Initialising members...")
-    async with AsyncManager().lock:
-      self.initialize_players(self.players_df, isFirstCalled)
+    # async with AsyncManager().lock:
+    self.initialize_players(self.players_df, isFirstCalled)
 
     print("[INFO] Populating approve queue...")
     for player in self.players.values():
@@ -261,10 +260,10 @@ class DiscordBot(metaclass=Singleton):
   async def update_players_to_db(self, lazy_load=True):
     # If the produced dataframe is different from the previous, update to db.
 
-    async with AsyncManager().lock:
-      if not self.get_players_df_from_players() and lazy_load:
-        #print("[INFO] No change in player df. Skipping update.")
-        return
+    #async with AsyncManager().lock:
+    if not self.get_players_df_from_players() and lazy_load:
+      #print("[INFO] No change in player df. Skipping update.")
+      return
 
     update_columns_to_gsheets(
       input_df=self.players_df,
