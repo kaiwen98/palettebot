@@ -369,7 +369,7 @@ async def on_message(message):
 
     clear_folder()
 
-    #await DiscordBot().update_players_to_db()
+    await DiscordBot().update_players_to_db()
 
   else:
     # The message might be a command. run it.
