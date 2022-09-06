@@ -424,7 +424,7 @@ async def on_raw_reaction_add(payload):
   player_id = message_artwork.author.id
 
   if player_id == approver.id:
-    return DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_APPROVE_CHANNEL)).send(
+    return await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_APPROVE_CHANNEL)).send(
       "Not authorised to approve! Don't congratulate yourself."
     )
 
