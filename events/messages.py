@@ -36,11 +36,9 @@ def register_events():
                 await weekp.on_message(message)
             elif message.channel.name == "bot-spam":
                 await bot.process_commands(message)
-                return 
 
     @bot.event
     async def on_raw_reaction_add(payload):
-
         async with AsyncManager().lock:
             if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
                 await ink.on_raw_reaction_add(payload, DiscordBot().approve_queue)

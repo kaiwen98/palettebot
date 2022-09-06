@@ -2,6 +2,7 @@
 Consolidates all commands that is related to Inktober.
 """
 from config_loader import get_config_param, set_config_param, GLOBAL_WEEKLYPROMPT_ISON
+from models.AsyncManager import AsyncManager
 from models.DiscordBot import DiscordBot
 from controller import weeklyprompts as weekp
 import asyncio
@@ -45,7 +46,8 @@ def register_events():
   )
 
   async def toggle(ctx):
-      value = get_config_param(GLOBAL_WEEKLYPROMPT_ISON)
-      set_config_param(GLOBAL_WEEKLYPROMPT_ISON, not value)
-      report_state = "ON" if not value else "OFF"
-      return await ctx.send(f"Toggle to {report_state}!")
+    print("called")
+    value = get_config_param(GLOBAL_WEEKLYPROMPT_ISON)
+    set_config_param(GLOBAL_WEEKLYPROMPT_ISON, not value)
+    report_state = "ON" if not value else "OFF"
+    return await ctx.send(f"Toggle to {report_state}!")

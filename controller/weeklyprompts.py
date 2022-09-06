@@ -2,6 +2,7 @@ from datetime import datetime
 import pystache
 import os
 from config_loader import GLOBAL_WEEKLYPROMPT_ISON, get_config_param, get_recorded_week
+from models.AsyncManager import AsyncManager
 
 from models.DiscordBot import DiscordBot
 import discord
@@ -66,16 +67,23 @@ async def task():
   # )
 
   print("[INFO] Starting WeeklyPrompt Applet...")
-  while get_config_param(GLOBAL_WEEKLYPROMPT_ISON):
-    # await DiscordBot().sync_db()
-    # do something
+
+  while True:
     delay: int = int(os.getenv(DELAY))
     await asyncio.sleep(delay)
+    async with AsyncManager().lock:
+      if not get_config_param(GLOBAL_WEEKLYPROMPT_ISON):
+        continue
+
+    # await DiscordBot().sync_db()
+    # do something
+
     # try:
 
     if is_done_this_week(hour=8):
       continue
     
+    print("hi")
     await get_scores(is_routine=True)
     # except Exception as e:
     #     await channel.send(
@@ -350,6 +358,8 @@ async def on_message(message):
       payload_to_store
     )
 
+    print("Player 1", player.message_id_sets[GSHEET_WEEKLYPROMPT_COLUMN_PENDING_APPROVAL])
+
     # To store in queue for retrieval.
     DiscordBot().approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS][message_approve_artwork.id] = payload_to_store
 
@@ -387,10 +397,13 @@ async def on_raw_reaction_add(payload):
     print("[ERR] Not authorised to approve!")
     return 
 
+  print(DiscordBot().approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS])
+  print(message_approve_artwork_id)
 
   try:
     approve_request_to_service = \
         DiscordBot().approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS][message_approve_artwork_id]
+
   except:
     print("Request Not found")
     return
@@ -409,6 +422,12 @@ async def on_raw_reaction_add(payload):
   )
 
   player_id = message_artwork.author.id
+
+  if player_id == approver.id:
+    return DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_APPROVE_CHANNEL)).send(
+      "Not authorised to approve! Don't congratulate yourself."
+    )
+
   player = DiscordBot().players[str(player_id)]
 
   if emoji == APPROVE_SIGN:
@@ -417,6 +436,7 @@ async def on_raw_reaction_add(payload):
     )
 
     player.increment_weeklyprompt_score_at_week(week, 1)
+    print("Player 1", player.message_id_sets[GSHEET_WEEKLYPROMPT_COLUMN_PENDING_APPROVAL])
 
     player.move_message_id_across_types(
       message_approve_artwork_id, 
@@ -445,6 +465,9 @@ async def on_raw_reaction_add(payload):
     )
     await message_artwork.add_reaction(NOT_APPROVE_SIGN)
     await remove_messages([message_approve_artwork])
+
+    # Remove id from queue
+    DiscordBot().approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS].pop(message_approve_artwork_id)
 
   
   await DiscordBot().update_players_to_db()
