@@ -77,7 +77,7 @@ class DiscordBot(metaclass=Singleton):
   """
 
   async def task(self):
-    print("Starting Gsheet update task...")
+    print("[SHEET] Starting Gsheet update task...")
 
     while True:
       # Sleep

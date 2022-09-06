@@ -66,7 +66,7 @@ async def task():
   # file = discord.File(PATH_IMG_HAPPY)
   # )
 
-  print("[INFO] Starting WeeklyPrompt Applet...")
+  print("[WEEKP] Starting WeeklyPrompt Applet...")
 
   while True:
     delay: int = int(os.getenv(DELAY))

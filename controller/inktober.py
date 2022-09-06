@@ -82,7 +82,7 @@ async def task():
   # file = discord.File(PATH_IMG_HAPPY)
   # )
 
-  print("Starting Inktober Applet...")
+  print("[INK] Starting Inktober Applet...")
   while True:
     # do something
 
