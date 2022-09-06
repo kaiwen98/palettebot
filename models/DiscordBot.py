@@ -6,6 +6,7 @@ from controller.excelHandler import (
   transform_df_birthday_column, 
   update_columns_to_gsheets
 )
+from models.AsyncManager import AsyncManager
 from models.Player import Player
 from models.Singleton import Singleton
 import discord
@@ -23,6 +24,7 @@ from utils.constants import (
   ART_FIGHT_MODE_WEEKLY_PROMPTS,
   ART_FIGHT_MODES,
   ART_FIGHT_STATE,
+  BOT_COMMAND_PREFIX,
   DEFAULT_INKTOBER_STATE_DATA,
   DEFAULT_MESSAGES_DATA,
   DEFAULT_WEEKLYPROMPT_STATE_DATA,
@@ -53,7 +55,7 @@ class DiscordBot(metaclass=Singleton):
     intents.messages = True
     intents.reactions = True
     self.token = os.getenv(DISCORD_TOKEN)
-    self.bot = discord.ext.commands.Bot(command_prefix='> ', intents=intents)
+    self.bot = discord.ext.commands.Bot(command_prefix=os.getenv(BOT_COMMAND_PREFIX), intents=intents)
     self.approve_queue = {
       k: {} for k in ART_FIGHT_MODES
     }
@@ -85,7 +87,7 @@ class DiscordBot(metaclass=Singleton):
 
   async def sync_db(self):
       # Crawls for new players to append to df
-    async with asyncio.Lock():
+    async with AsyncManager().lock:
       await self.update_new_players()
 
       # Update all player data to DB
@@ -124,7 +126,7 @@ class DiscordBot(metaclass=Singleton):
     self.players_df = transform_df_birthday_column(self.players_df)
 
     print("[INFO] Initialising members...")
-    async with asyncio.Lock():
+    async with AsyncManager().lock:
       self.initialize_players(self.players_df, isFirstCalled)
 
     print("[INFO] Populating approve queue...")
@@ -133,6 +135,8 @@ class DiscordBot(metaclass=Singleton):
       self.approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS].update(player.message_id_sets[GSHEET_WEEKLYPROMPT_COLUMN_PENDING_APPROVAL])
       self.approve_queue[ART_FIGHT_MODE_WAIFUWARS].update(player.message_id_sets[GSHEET_WAIFUWARS_COLUMN_PENDING_APPROVAL])
       self.approve_queue[ART_FIGHT_MODE_INKTOBER].update(player.message_id_sets[GSHEET_INKTOBER_COLUMN_PENDING_APPROVAL])
+
+    print("[INFO] Done Initialising players!")
       #print(self.approve_queue)
 
   async def update_new_players(self):
@@ -163,7 +167,7 @@ class DiscordBot(metaclass=Singleton):
         print("DUPLICATE KEY ERROR ", key, index)
         continue
 
-      self.players[key] = Player(row)
+      self.players[key] = Player(row, index)
     print("[INFO] End intialising players")
 
   def get_appended_unrecorded_members(self, df):
@@ -257,7 +261,7 @@ class DiscordBot(metaclass=Singleton):
   async def update_players_to_db(self, lazy_load=True):
     # If the produced dataframe is different from the previous, update to db.
 
-    async with asyncio.Lock():
+    async with AsyncManager().lock:
       if not self.get_players_df_from_players() and lazy_load:
         #print("[INFO] No change in player df. Skipping update.")
         return

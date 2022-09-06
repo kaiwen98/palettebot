@@ -1,6 +1,7 @@
 """
 Consolidates all commands that is related to Inktober.
 """
+from models.AsyncManager import AsyncManager
 from models.DiscordBot import DiscordBot
 from controller import inktober as ink
 import asyncio
@@ -17,7 +18,7 @@ def register_events():
     help='Resets day and repeats announcement'
   )
   async def reset_day(ctx):
-    async with asyncio.Lock():
+    async with AsyncManager().lock:
       cfg.curr_day = -1
       await ctx.send(
         "```Day reset!```" 
