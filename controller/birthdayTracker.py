@@ -73,7 +73,7 @@ async def task():
   guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
   channel = DiscordBot().get_channel(guild, os.getenv(BIRTHDAY_REPORT_CHANNEL))
 
-  print("Starting Birthday Applet...")
+  print("[BDAY] Starting Birthday Applet...")
   while True:
     await asyncio.sleep(int(os.getenv(DELAY)) + 10)
 
