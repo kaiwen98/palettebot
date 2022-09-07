@@ -135,6 +135,8 @@ class DiscordBot(metaclass=Singleton):
       self.approve_queue[ART_FIGHT_MODE_WAIFUWARS].update(player.message_id_sets[GSHEET_WAIFUWARS_COLUMN_PENDING_APPROVAL])
       self.approve_queue[ART_FIGHT_MODE_INKTOBER].update(player.message_id_sets[GSHEET_INKTOBER_COLUMN_PENDING_APPROVAL])
 
+    print(self.approve_queue)
+
     print("[INFO] Done Initialising players!")
       #print(self.approve_queue)
 
@@ -329,7 +331,7 @@ class DiscordBot(metaclass=Singleton):
       if inv.code == code:
         return inv
 
-  async def get_message_by_id(self, channel, id):
+  async def get_message_by_id(self, channel: str, id: int):
     return await self.get_channel(None, channel).fetch_message(id)
 
   def get_discord_handle(self, discord_name, get_uid=True):

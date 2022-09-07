@@ -344,9 +344,9 @@ async def on_message(message):
             prompts
           )
         ],
-        PAYLOAD_PARAM_MESSAGE_TO_SUBMITTED_ARTWORK : message.id, 
-        PAYLOAD_PARAM_MESSAGE_TO_APPROVE_ARTWORK : message_approve_artwork.id,
-        PAYLOAD_PARAM_MESSAGE_TO_APPROVE_ARTWORK_STATUS : message_approval_status.id
+        PAYLOAD_PARAM_MESSAGE_TO_SUBMITTED_ARTWORK : str(message.id), 
+        PAYLOAD_PARAM_MESSAGE_TO_APPROVE_ARTWORK : str(message_approve_artwork.id),
+        PAYLOAD_PARAM_MESSAGE_TO_APPROVE_ARTWORK_STATUS : str(message_approval_status.id)
     }
 
     #print(payload_to_store)
@@ -413,12 +413,12 @@ async def on_raw_reaction_add(payload):
 
   message_artwork = await DiscordBot().get_message_by_id(
     os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL), 
-    approve_request_to_service[PAYLOAD_PARAM_MESSAGE_TO_SUBMITTED_ARTWORK]
+    int(approve_request_to_service[PAYLOAD_PARAM_MESSAGE_TO_SUBMITTED_ARTWORK])
   )
 
   message_approval_status = await DiscordBot().get_message_by_id(
     os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL), 
-    approve_request_to_service[PAYLOAD_PARAM_MESSAGE_TO_APPROVE_ARTWORK_STATUS]
+    int(approve_request_to_service[PAYLOAD_PARAM_MESSAGE_TO_APPROVE_ARTWORK_STATUS])
   )
 
   player_id = message_artwork.author.id

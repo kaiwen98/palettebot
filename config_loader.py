@@ -24,7 +24,7 @@ global_config_params = {
   "GLOBAL_WEEK": None,
   "GLOBAL_DATETIME": None,
   "GLOBAL_DELAY": None,
-  "GLOBAL_WEEKLYPROMPT_ISON": False
+  "GLOBAL_WEEKLYPROMPT_ISON": True
 }
 
 def set_config_param(key, value):
