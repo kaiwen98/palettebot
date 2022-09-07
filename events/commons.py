@@ -27,7 +27,7 @@ from config_loader import (
 	get_config_param,
 	set_config_param,
 )
-from utils.constants import ART_FIGHT_MODE_WEEKLY_PROMPTS, ART_FIGHT_STATE, BOT_USERNAME, DISCORD_GUILD, EXTRAVAGANZA_ROLE
+from utils.constants import ART_FIGHT_MODE_WEEKLY_PROMPTS, ART_FIGHT_STATE, BOT_USERNAME, DISCORD_GUILD, EXTRAVAGANZA_ROLE, WEEKLYPROMPTS_RECEIVE_CHANNEL
 from utils.utils import (
 	get_day_from_message,
 	get_num_days_away,
@@ -49,11 +49,31 @@ def register_events():
 	bot = DiscordBot().bot
 	@bot.event
 	async def on_ready():
+		print(os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL))
+		links = await DiscordBot().get_guild().invites()
+		f_links = list(filter(lambda link: link.code in ['WbGacQnYUp'], links))
+		#print(f_links[0].uses)
+		#print(links)
+		members = DiscordBot().get_guild().members
+		f_members = \
+			list(filter(lambda member: \
+				"Member" not in member.roles \
+				and member.joined_at >= datetime.datetime(2022, 2, 1, 0, 0, 0)
+				and member.joined_at <= datetime.datetime(2022, 6, 1, 0, 0, 0)
+			   , members))
+		f_members.sort(key=lambda x: x.joined_at)
+
+		print(list(map(lambda x: [x.name, x.nick], f_members)))
+		print(f_members)
 		await DiscordBot().set_up_after_run()
 		print("[INFO] Ready!")
 		await DiscordBot().bot.user.edit(username=os.getenv(BOT_USERNAME))
 			
 		print(f'{bot.user} has connected to Discord!')
+
+
+
+		print(links)
 
 		if os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
 			bot.loop.create_task(ink.task())

@@ -353,7 +353,7 @@ async def on_message(message):
 
     # To store in db for persistence.
     player.add_message_id_to_set_by_type(
-      message_approve_artwork.id, 
+      str(message_approve_artwork.id), 
       GSHEET_WEEKLYPROMPT_COLUMN_PENDING_APPROVAL,
       payload_to_store
     )
@@ -361,7 +361,7 @@ async def on_message(message):
     print("Player 1", player.message_id_sets[GSHEET_WEEKLYPROMPT_COLUMN_PENDING_APPROVAL])
 
     # To store in queue for retrieval.
-    DiscordBot().approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS][message_approve_artwork.id] = payload_to_store
+    DiscordBot().approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS][str(message_approve_artwork.id)] = payload_to_store
 
 
     await message_approve_artwork.add_reaction(APPROVE_SIGN)
@@ -402,7 +402,7 @@ async def on_raw_reaction_add(payload):
 
   try:
     approve_request_to_service = \
-        DiscordBot().approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS][message_approve_artwork_id]
+        DiscordBot().approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS][str(message_approve_artwork_id)]
 
   except:
     print("Request Not found")
@@ -439,7 +439,7 @@ async def on_raw_reaction_add(payload):
     print("Player 1", player.message_id_sets[GSHEET_WEEKLYPROMPT_COLUMN_PENDING_APPROVAL])
 
     player.move_message_id_across_types(
-      message_approve_artwork_id, 
+      str(message_approve_artwork_id), 
       GSHEET_WEEKLYPROMPT_COLUMN_PENDING_APPROVAL, 
       GSHEET_WEEKLYPROMPT_COLUMN_APPROVED
     )
@@ -459,7 +459,7 @@ async def on_raw_reaction_add(payload):
     )
 
     player.move_message_id_across_types(
-      message_approve_artwork_id, 
+      str(message_approve_artwork_id), 
       GSHEET_WEEKLYPROMPT_COLUMN_PENDING_APPROVAL, 
       GSHEET_WEEKLYPROMPT_COLUMN_REJECTED
     )
@@ -467,7 +467,7 @@ async def on_raw_reaction_add(payload):
     await remove_messages([message_approve_artwork])
 
     # Remove id from queue
-    DiscordBot().approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS].pop(message_approve_artwork_id)
+  DiscordBot().approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS].pop(str(message_approve_artwork_id))
 
   
   await DiscordBot().update_players_to_db()
