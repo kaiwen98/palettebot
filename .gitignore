@@ -1,3 +1,5 @@
 env
 **/__pycache__
 settings.yaml
+cred/
+.env.*
