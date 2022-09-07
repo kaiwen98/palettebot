@@ -79,7 +79,8 @@ def load_config(env):
   art_fight_state = ART_FIGHT_MODE_NOTHING
 
   if is_production_env:
-    art_fight_state = ART_FIGHT_MODE_INKTOBER if datetime.now().month == 10 else ART_FIGHT_MODE_NOTHING
+    #art_fight_state = ART_FIGHT_MODE_INKTOBER if datetime.now().month == 10 else ART_FIGHT_MODE_NOTHING
+    art_fight_state = ART_FIGHT_MODE_WEEKLY_PROMPTS
   else:
     art_fight_state = ART_FIGHT_MODE_WEEKLY_PROMPTS
 
