@@ -12,7 +12,8 @@ from utils.constants import (
   ART_FIGHT_MODE_INKTOBER, 
   ART_FIGHT_MODE_NOTHING,
   ART_FIGHT_MODE_WAIFUWARS,
-  ART_FIGHT_MODE_WEEKLY_PROMPTS
+  ART_FIGHT_MODE_WEEKLY_PROMPTS,
+  ART_FIGHT_STATE
 )
 
 """
@@ -84,7 +85,7 @@ def load_config(env):
   else:
     art_fight_state = ART_FIGHT_MODE_WEEKLY_PROMPTS
 
-  set_key(dotenv_path, "ART_FIGHT_STATE", str(art_fight_state))
+  set_key(dotenv_path, ART_FIGHT_STATE, str(art_fight_state))
 
   # print(os.environ)
 
