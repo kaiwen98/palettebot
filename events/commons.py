@@ -75,11 +75,11 @@ def register_events():
 
 		print(links)
 
-		if os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
+		if get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
 			bot.loop.create_task(ink.task())
-		elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WAIFUWARS:
+		elif get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_WAIFUWARS:
 			bot.loop.create_task(waf.task())
-		elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS:
+		elif get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS:
 			bot.loop.create_task(weekp.task())
 
 		bot.loop.create_task(DiscordBot().task())
