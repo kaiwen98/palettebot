@@ -41,7 +41,9 @@ def register_events():
     async def on_raw_reaction_add(payload):
         async with AsyncManager().lock:
             print("pepe")
-            if ART_FIGHT_STATE == ART_FIGHT_MODE_INKTOBER:
+            print(get_config_param(GLOBAL_WEEKLYPROMPT_ISON))
+            print(os.getenv(ART_FIGHT_STATE))
+            if os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
                 await ink.on_raw_reaction_add(payload, DiscordBot().approve_queue)
             elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS and get_config_param(GLOBAL_WEEKLYPROMPT_ISON):
                 await weekp.on_raw_reaction_add(payload)
