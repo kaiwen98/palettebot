@@ -21,6 +21,7 @@ from controller import inktober as ink
 from controller import waifuwars as waf
 from config_loader import load_config
 from models.DiscordBot import DiscordBot
+import re
 
 from controller.excelHandler import (
   get_fuzzily_discord_handle, 
@@ -120,6 +121,9 @@ async def handle_check_birthdates_and_give_shoutout():
 
           has_sent_bday_pic = True
 
+
+          name = f"<@{player[GSHEET_COLUMN_DISCORD_ID]}>" if not re.match(RE_PATTERN_UUID1, player[GSHEET_COLUMN_DISCORD_ID]) else f"**{player[GSHEET_COLUMN_DISCORD]}**"
+          print(re.match(RE_PATTERN_UUID1, player[GSHEET_COLUMN_DISCORD_ID]))
           await channel.send(
             "Birthday baby sighted! :mag_right: :mag_right: HAPPY BIRTHDAY <@%s> :birthday: :candle: :birthday: :candle:" % \
             (player[GSHEET_COLUMN_DISCORD_ID]),

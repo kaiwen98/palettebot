@@ -16,25 +16,39 @@ def is_done_this_day(hour=None):
 
   if (
     # This week
-    get_recorded_date() != \
-      get_today_datetime().date() 
+    (
+      get_recorded_date() \
+      != get_today_datetime().date() 
+    )
     # At this hour
-      and (hour is None or get_today_datetime() == hour) 
+    and (
+      hour is None 
+      or get_today_datetime().hour == int(hour)
+    ) 
   ):
     set_recorded_date(get_today_datetime().date())
     return False
   return True
 
-def is_done_this_week(hour=None):
+
+def is_done_this_week(hour=None, reset=None):
+  print(hour)
+  print(get_recorded_week())
+
   if get_recorded_week() == None:
     set_recorded_week(get_week_from_datetime(get_today_datetime()))
 
   if (
     # This week
-    get_recorded_week() != \
-      get_week_from_datetime(get_today_datetime()) 
+    (
+      get_recorded_week() \
+      != get_week_from_datetime(get_today_datetime())
+    ) 
     # At this hour
-      and (hour is None or get_today_datetime() == hour) 
+    and (
+      hour is None 
+      or get_today_datetime().hour == int(hour)
+    ) 
   ):
     set_recorded_week(get_week_from_datetime(get_today_datetime()))
     return False

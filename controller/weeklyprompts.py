@@ -80,7 +80,7 @@ async def task():
 
     # try:
 
-    if is_done_this_week(hour=8):
+    if is_done_this_week(hour=22):
       continue
     
     print("hi")

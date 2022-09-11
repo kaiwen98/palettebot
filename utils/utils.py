@@ -45,9 +45,11 @@ def get_week_from_datetime(input_datetime):
   sem1_week_offset = datetime(datetime.today().year, 8, 9)
   sem2_week_offset = datetime(datetime.today().year, 1, 9)
   return input_datetime.isocalendar()[1] + 1 - \
-    sem1_week_offset.isocalendar()[1] \
-    if input_datetime > sem1_week_offset \
-    else sem2_week_offset.isocalendar()[1]
+    (
+      sem1_week_offset.isocalendar()[1] \
+      if input_datetime > sem1_week_offset \
+      else sem2_week_offset.isocalendar()[1]
+    )
 
 def get_today_date():
   return get_today_datetime().date()
@@ -63,16 +65,20 @@ def get_today_datetime():
   return output_datetime
 
 def get_today_week():
+  # Get week of the semester without factoring recess week
   actual_week = get_week_from_datetime(get_today_datetime())
   output_week = -1
-  # By right, this is recess week. We need to factor that in.
-  if actual_week > 7:
-    output_week = actual_week - 1
-  elif actual_week < 7: 
-    output_week = actual_week
+  RECESS_WEEK = 7
   
   if output_week in WEEKLYTOBER_WEEKS_TO_IGNORE:
     output_week = -1
+
+  else:
+    # By right, this is recess week. We need to factor that in.
+    if actual_week > RECESS_WEEK:
+      output_week = actual_week - 1
+    elif actual_week < RECESS_WEEK: 
+      output_week = actual_week
 
   return output_week
 
