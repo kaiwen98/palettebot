@@ -122,8 +122,8 @@ async def handle_check_birthdates_and_give_shoutout():
 
           has_sent_bday_pic = True
 
-          name = f"<@{player[GSHEET_COLUMN_DISCORD_ID]}>" if re.match(RE_PATTERN_UUID1, player[GSHEET_COLUMN_DISCORD_ID]) else player[GSHEET_COLUMN_DISCORD]
-
+          name = f"<@{player[GSHEET_COLUMN_DISCORD_ID]}>" if not re.match(RE_PATTERN_UUID1, player[GSHEET_COLUMN_DISCORD_ID]) else f"**{player[GSHEET_COLUMN_DISCORD]}**"
+          print(re.match(RE_PATTERN_UUID1, player[GSHEET_COLUMN_DISCORD_ID]))
           await channel.send(
             "Birthday baby sighted! :mag_right: :mag_right: HAPPY BIRTHDAY %s :birthday: :candle: :birthday: :candle:" % \
             (name),
