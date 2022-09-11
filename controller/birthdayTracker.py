@@ -77,7 +77,7 @@ async def task():
   while True:
     await asyncio.sleep(int(os.getenv(DELAY)) + 10)
 
-    if is_done_this_day(hour=HOUR_WISH_BIRTHDAY): 
+    if is_done_this_day(reset=False): 
       continue
     # try:
     await handle_check_birthdates_and_give_shoutout()
