@@ -10,6 +10,7 @@ from discord.utils import get
 import requests
 from datetime import datetime, time, timedelta
 from zipfile import ZipFile
+import re
 
 
 import config_loader as cfg
@@ -51,6 +52,7 @@ from utils.constants import (
   MEMBER_ROLE,
   PATH_IMG_BIRTHDAY,
   PATH_IMG_BIRTHDAY_1WEEK,
+  RE_PATTERN_UUID1,
   STATE_NO_SHOUTOUTS,
   STATE_SHOUTOUT_DAY,
   STATE_SHOUTOUT_WEEK
@@ -120,9 +122,11 @@ async def handle_check_birthdates_and_give_shoutout():
 
           has_sent_bday_pic = True
 
+          name = f"<@{player[GSHEET_COLUMN_DISCORD_ID]}>" if re.match(RE_PATTERN_UUID1, player[GSHEET_COLUMN_DISCORD_ID]) else player[GSHEET_COLUMN_DISCORD]
+
           await channel.send(
-            "Birthday baby sighted! :mag_right: :mag_right: HAPPY BIRTHDAY <@%s> :birthday: :candle: :birthday: :candle:" % \
-            (player[GSHEET_COLUMN_DISCORD_ID]),
+            "Birthday baby sighted! :mag_right: :mag_right: HAPPY BIRTHDAY %s :birthday: :candle: :birthday: :candle:" % \
+            (name),
           )  
 
           player[GSHEET_BIRTHDAY_COLUMN_STATE] = STATE_SHOUTOUT_DAY

@@ -252,5 +252,7 @@ PAYLOAD_PARAMS = [
   PAYLOAD_PARAM_MESSAGE_TO_APPROVE_ARTWORK_STATUS
 ]
 
+RE_PATTERN_UUID1 = r'[0-9a-f]{8}\-[0-9a-f]{4}\-1[0-9a-f]{3}\-[0-9a-f]{4}\-[0-9a-f]{12}'
+
 
 
