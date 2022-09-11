@@ -58,7 +58,7 @@ Here is an example:
 Week: 1
 Prompt: 4 5
 ```
-Try again!
+Edit your message and try again!
 """
 
 MESSAGE_WEEKLYPROMPT_WRONG_WEEK = """
