@@ -12,7 +12,8 @@ from utils.constants import (
   ART_FIGHT_MODE_INKTOBER, 
   ART_FIGHT_MODE_NOTHING,
   ART_FIGHT_MODE_WAIFUWARS,
-  ART_FIGHT_MODE_WEEKLY_PROMPTS
+  ART_FIGHT_MODE_WEEKLY_PROMPTS,
+  ART_FIGHT_STATE
 )
 
 """
@@ -24,7 +25,8 @@ global_config_params = {
   "GLOBAL_WEEK": None,
   "GLOBAL_DATETIME": None,
   "GLOBAL_DELAY": None,
-  "GLOBAL_WEEKLYPROMPT_ISON": True
+  "GLOBAL_WEEKLYPROMPT_ISON": True,
+  ART_FIGHT_STATE : ART_FIGHT_MODE_NOTHING 
 }
 
 def set_config_param(key, value):
@@ -79,12 +81,13 @@ def load_config(env):
   art_fight_state = ART_FIGHT_MODE_NOTHING
 
   if is_production_env:
-    art_fight_state = ART_FIGHT_MODE_INKTOBER if datetime.now().month == 10 else ART_FIGHT_MODE_NOTHING
+    #art_fight_state = ART_FIGHT_MODE_INKTOBER if datetime.now().month == 10 else ART_FIGHT_MODE_NOTHING
+    art_fight_state = ART_FIGHT_MODE_WEEKLY_PROMPTS
   else:
     art_fight_state = ART_FIGHT_MODE_WEEKLY_PROMPTS
 
-  set_key(dotenv_path, "ART_FIGHT_STATE", str(art_fight_state))
-
+  set_key(dotenv_path, ART_FIGHT_STATE, str(art_fight_state))
+  set_config_param(ART_FIGHT_STATE, art_fight_state)
   # print(os.environ)
 
   DiscordBot()
