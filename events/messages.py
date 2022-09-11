@@ -38,6 +38,18 @@ def register_events():
                 await bot.process_commands(message)
 
     @bot.event
+    async def on_message_edit(message_before, message_after):
+        async with AsyncManager().lock:
+            if get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
+                await ink.on_message(message_after, DiscordBot().approve_queue)
+            elif get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_WAIFUWARS:
+                await waf.on_message_waifuwars(message_after, DiscordBot().approve_queue)
+            elif get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS and get_config_param(GLOBAL_WEEKLYPROMPT_ISON):
+                await weekp.on_message(message_after)
+            elif message.channel.name == "bot-spam":
+                await bot.process_commands(message_after)
+
+    @bot.event
     async def on_raw_reaction_add(payload):
         async with AsyncManager().lock:
             print("pepe")
