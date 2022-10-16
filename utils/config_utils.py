@@ -32,8 +32,9 @@ def is_done_this_day(hour=None, reset=None):
   return True
 
 def is_done_this_week(hour=None, reset=None):
-  print(hour)
+
   print(get_recorded_week())
+  print(hour)
 
   if get_recorded_week() == None:
     set_recorded_week(get_week_from_datetime(get_today_datetime()))
@@ -64,4 +65,5 @@ def is_done_this_week(hour=None, reset=None):
     "Hour: ", 
     get_today_datetime().hour
   )
+
   return True
