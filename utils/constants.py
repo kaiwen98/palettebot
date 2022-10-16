@@ -235,10 +235,14 @@ WEEKLYPROMPT_DICT_WEEK_TO_PROMPT = {
     Prompt("The Challenge", ":muscle:")
   ],
   10: [
-    Prompt("[LOCKED]", ":lock:")
+    Prompt("Fangs", ":vampire:"),
+    Prompt("Forest", ":evergreen_tree:"),
+    Prompt("Twilight", ":first_quarter_moon:")
   ],
   11: [
-    Prompt("[LOCKED]", ":lock:")
+    Prompt("Witch's curse", ":woman_mage:"),
+    Prompt("Gothic", ":nail_care: :black_cat:"),
+    Prompt("Trick or Treat!", ":jack_o_lantern: :candy:")
   ],
 }
 
