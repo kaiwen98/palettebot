@@ -173,18 +173,6 @@ async def get_scores(is_routine=False):
     pystache.render(
       MESSAGE_WEEKLYPROMPT_SCORE_MESSAGE,
       {
-        "game": "Weekly Prompts",
-        "role": "@everyone",
-        "prompts": [
-          {
-            "id": id + 1,
-            "emoji": prompt.emoji,
-            "prompt": prompt.prompt
-          }
-          for id, prompt in enumerate(
-            prompts
-          )
-        ],
         "scores":  scores,
       }
     )
