@@ -1,7 +1,7 @@
 from datetime import datetime
 import pystache
 import os
-from config_loader import GLOBAL_WEEKLYPROMPT_ISON, get_config_param, get_recorded_week
+from config_loader import GLOBAL_WEEKLYPROMPT_ISON, get_config_param, get_recorded_week, set_config_param
 from models.AsyncManager import AsyncManager
 
 from models.DiscordBot import DiscordBot
@@ -72,7 +72,7 @@ async def task():
     delay: int = int(os.getenv(DELAY))
     await asyncio.sleep(delay)
     async with AsyncManager().lock:
-      if not get_config_param(GLOBAL_WEEKLYPROMPT_ISON) or get_today_week() >= 12:
+      if not get_config_param(GLOBAL_WEEKLYPROMPT_ISON):
         continue
 
     # await DiscordBot().sync_db()
@@ -134,6 +134,7 @@ async def get_scores(is_routine=False):
   else:
     message = \
       MESSAGE_WEEKLYPROMPT_LAST_WEEK_MESSAGE
+    set_config_param(GLOBAL_WEEKLYPROMPT_ISON, False) 
 
   await channel_to_send.send(message)
   
