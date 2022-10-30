@@ -45,7 +45,7 @@ from utils.constants import (
   WEEKLYPROMPTS_RECEIVE_CHANNEL,
   WEEKLYPROMPTS_UPLOAD_LIMIT
 )
-from utils.messages import MESSAGE_APPROVE_ARTWORK, MESSAGE_WEEKLYPROMPT_BLOCKED_WEEK, MESSAGE_WEEKLYPROMPT_SCORE_MESSAGE, MESSAGE_WEEKLYPROMPT_WEEK_MESSAGE, MESSAGE_WEEKLYPROMPT_WRONG_REQUEST_INPUT, MESSAGE_WEEKLYPROMPT_WRONG_WEEK
+from utils.messages import MESSAGE_APPROVE_ARTWORK, MESSAGE_WEEKLYPROMPT_BLOCKED_WEEK, MESSAGE_WEEKLYPROMPT_LAST_WEEK_MESSAGE, MESSAGE_WEEKLYPROMPT_SCORE_MESSAGE, MESSAGE_WEEKLYPROMPT_WEEK_MESSAGE, MESSAGE_WEEKLYPROMPT_WRONG_REQUEST_INPUT, MESSAGE_WEEKLYPROMPT_WRONG_WEEK
 from utils.utils import (
   calculate_score, 
   clear_folder, 
@@ -72,7 +72,7 @@ async def task():
     delay: int = int(os.getenv(DELAY))
     await asyncio.sleep(delay)
     async with AsyncManager().lock:
-      if not get_config_param(GLOBAL_WEEKLYPROMPT_ISON):
+      if not get_config_param(GLOBAL_WEEKLYPROMPT_ISON) or get_today_week() >= 12:
         continue
 
     # await DiscordBot().sync_db()
@@ -110,26 +110,31 @@ async def get_scores(is_routine=False):
     return await channel_to_send.send(MESSAGE_WEEKLYPROMPT_BLOCKED_WEEK)
 
   prompts = WEEKLYPROMPT_DICT_WEEK_TO_PROMPT[today_week]
+  
+  if today_week != 12:
+    # Send Weekly message
+    message = \
+      pystache.render(
+        MESSAGE_WEEKLYPROMPT_WEEK_MESSAGE,
+        {
+          "bot_name": DiscordBot().bot.user.display_name,
+          "week": today_week,
+          "prompts": [
+            {
+              "id": id + 1,
+              "emoji": prompt.emoji,
+              "prompt": prompt.prompt
+            }
+            for id, prompt in enumerate(
+              prompts
+            )
+          ],
+        }
+      )
+  else:
+    message = \
+      MESSAGE_WEEKLYPROMPT_LAST_WEEK_MESSAGE
 
-  # Send Weekly message
-  message = \
-    pystache.render(
-      MESSAGE_WEEKLYPROMPT_WEEK_MESSAGE,
-      {
-        "bot_name": DiscordBot().bot.user.display_name,
-        "week": today_week,
-        "prompts": [
-          {
-            "id": id + 1,
-            "emoji": prompt.emoji,
-            "prompt": prompt.prompt
-          }
-          for id, prompt in enumerate(
-            prompts
-          )
-        ],
-      }
-    )
   await channel_to_send.send(message)
   
   # Send score message
@@ -167,7 +172,7 @@ async def get_scores(is_routine=False):
       MESSAGE_WEEKLYPROMPT_SCORE_MESSAGE,
       {
         "game": "Weekly Prompts",
-        "role": "@everyo",
+        "role": "@everyone",
         "prompts": [
           {
             "id": id + 1,

@@ -14,6 +14,13 @@ Theme:
 Approve this post? {{jumpUrl}}
 """
 
+MESSAGE_WEEKLYPROMPT_LAST_WEEK_MESSAGE = """
+**[Weekly Prompts Finale]**
+
+Hi everyone! Thank you for your submissions thus far! Hope it has been fun for you  ＼(＾∀＾)メ(＾∀＾)ノ
+
+"""
+
 MESSAGE_WEEKLYPROMPT_WEEK_MESSAGE = """
 **[Week {{week}} Prompts]**
 
