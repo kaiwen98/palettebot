@@ -109,9 +109,10 @@ async def get_scores(is_routine=False):
   if today_week == -1:
     return await channel_to_send.send(MESSAGE_WEEKLYPROMPT_BLOCKED_WEEK)
 
-  prompts = WEEKLYPROMPT_DICT_WEEK_TO_PROMPT[today_week]
   
   if today_week != 12:
+
+    prompts = WEEKLYPROMPT_DICT_WEEK_TO_PROMPT[today_week]
     # Send Weekly message
     message = \
       pystache.render(
