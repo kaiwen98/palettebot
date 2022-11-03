@@ -84,7 +84,7 @@ async def task():
       continue
     
     print("hi")
-    await get_scores(is_routine=True)
+    # await get_scores(is_routine=True)
     # except Exception as e:
     #     await channel.send(
     #         "```Error occured! Contact the administrator. Message: %s```" % (str(e))
