@@ -58,7 +58,8 @@ from utils.constants import (
     STATE_NO_SHOUTOUTS
 )
 
-PATH_TO_CREDENTIALS = "./cred/gsheets/credentials_excel.json"
+PATH_TO_CREDENTIALS = "./credentials_excel.json" if os.getenv("ENV") == "production" \
+    else "./cred/gsheets/credentials_excel.json"
 
 qn_to_colnames = {
     "Birthday (DDMMYYYY)" : "Birthday",

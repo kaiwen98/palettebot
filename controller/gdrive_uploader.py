@@ -13,11 +13,12 @@ from utils.utils import get_file_path
 
 gauth = GoogleAuth()
 print(
-  get_file_path("cred", "gdrive", "credentials.json")
+    get_file_path("cred", "gdrive", "credentials.json")
 )
 
 gauth.LoadCredentialsFile(
-  get_file_path("cred", "gdrive", "credentials.json")
+    "./credentials.json" if os.getenv("ENV") == "production" \
+    else get_file_path("cred", "gdrive", "credentials.json")  
 )
 
 drive = GoogleDrive(gauth)  
