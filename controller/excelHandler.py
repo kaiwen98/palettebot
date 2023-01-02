@@ -58,8 +58,7 @@ from utils.constants import (
     STATE_NO_SHOUTOUTS
 )
 
-PATH_TO_CREDENTIALS = "./credentials_excel.json" if os.getenv("ENV") == "production" \
-    else "./cred/gsheets/credentials_excel.json"
+
 
 qn_to_colnames = {
     "Birthday (DDMMYYYY)" : "Birthday",
@@ -86,6 +85,13 @@ colnames_to_qn = {v: k for k, v in qn_to_colnames.items()}
 
 
 csv_data = None
+
+PATH_TO_CREDENTIALS = None
+
+def set_up_gsheets():
+    global PATH_TO_CREDENTIALS
+    PATH_TO_CREDENTIALS = "./credentials_excel.json" if os.getenv("ENV") == "production" \
+    else "./cred/gsheets/credentials_excel.json"
 
 def get_member_info_from_gsheets():
     """ Used to handle automated birthday celebrations.

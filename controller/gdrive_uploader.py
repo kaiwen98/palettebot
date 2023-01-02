@@ -11,17 +11,18 @@ from datetime import datetime
 from utils.constants import DRIVE__PALETTE_REP_TRACKER
 from utils.utils import get_file_path
 
-gauth = GoogleAuth()
-print(
-    get_file_path("cred", "gdrive", "credentials.json")
-)
+drive = None
 
-gauth.LoadCredentialsFile(
-    "./credentials.json" if os.getenv("ENV") == "production" \
-    else get_file_path("cred", "gdrive", "credentials.json")  
-)
+def set_up_gdrive():
+    global drive
+    gauth = GoogleAuth()
+    print(os.getenv("ENV"))
+    gauth.LoadCredentialsFile(
+        "./credentials.json" if os.getenv("ENV") == "production" \
+        else get_file_path("cred", "gdrive", "credentials.json")  
+    )
 
-drive = GoogleDrive(gauth)  
+    drive = GoogleDrive(gauth)  
 
 def upload_to_gdrive(upload_file_list: list):
     for upload_file in upload_file_list:

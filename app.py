@@ -1,4 +1,6 @@
 import os
+from controller.excelHandler import set_up_gsheets
+from controller.gdrive_uploader import set_up_gdrive
 from models.DiscordBot import DiscordBot
 
 from events.commons import register_events as register_events_commons
@@ -16,6 +18,8 @@ from config_loader import load_env_by_command_line_args
 if __name__ == "__main__":
   # Load environment
   load_env_by_command_line_args()
+  set_up_gdrive()
+  set_up_gsheets()
   register_events_commons()
   #register_events_member()
   register_events_birthday()
