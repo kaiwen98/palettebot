@@ -3,3 +3,6 @@ env
 env1
 **/__pycache__
 settings.yaml
+client_secret_*.json
+credentials.json
+credentials_excel.json
