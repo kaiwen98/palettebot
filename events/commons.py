@@ -104,7 +104,7 @@ def register_events():
 		await ctx.send(f"```{get_today_datetime()}```")
 
 	@bot.command(
-		name='sync'
+		name='sync',
 		help='Synchronise with google sheet'
 	)
 	async def sync(ctx):
