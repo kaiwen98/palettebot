@@ -27,7 +27,15 @@ from config_loader import (
 	get_config_param,
 	set_config_param,
 )
-from utils.constants import ART_FIGHT_MODE_WEEKLY_PROMPTS, ART_FIGHT_STATE, BOT_USERNAME, DISCORD_GUILD, EXTRAVAGANZA_ROLE, WEEKLYPROMPTS_RECEIVE_CHANNEL
+from utils.constants import (
+	ART_FIGHT_MODE_WEEKLY_PROMPTS, 
+	ART_FIGHT_STATE, 
+	BOT_USERNAME, 
+	DISCORD_GUILD,
+	EXTRAVAGANZA_ROLE, 
+	WEEKLYPROMPTS_RECEIVE_CHANNEL
+)
+
 from utils.utils import (
 	get_day_from_message,
 	get_num_days_away,
@@ -81,9 +89,11 @@ def register_events():
 			bot.loop.create_task(waf.task())
 		elif get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS:
 			bot.loop.create_task(weekp.task())
-
-		bot.loop.create_task(DiscordBot().task())
-		bot.loop.create_task(birthdayTracker.task())
+		
+		# This periodic task is pretty wasteful.
+		# Should just run a refresh by command only when required.
+		# bot.loop.create_task(DiscordBot().task())
+		# bot.loop.create_task(birthdayTracker.task())
 
 
 	@bot.command(
@@ -92,6 +102,15 @@ def register_events():
 	)
 	async def get_sys_datetime(ctx):
 		await ctx.send(f"```{get_today_datetime()}```")
+
+	@bot.command(
+		name='sync'
+		help='Synchronise with google sheet'
+	)
+	async def sync(ctx):
+		await ctx.send(f"```Syncing...```")
+		await DiscordBot().sync_db()
+		await ctx.send(f"```Done!```")
 
 	@bot.command(
 		name="msg",
