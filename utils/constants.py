@@ -205,6 +205,52 @@ class Prompt():
     self.emoji = emoji
 
 
+
+WEEKLYPROMPT_DICT_WEEK_TO_PROMPT = {
+  1: [
+    Prompt("Academy Uniform", ":student:"),
+    Prompt("With my friends", ":people_with_bunny_ears_partying:"),
+    Prompt("Another day", ":park:")
+  ],
+  3: [
+    Prompt("Memories of Winter", ":snowflake:"),
+    Prompt("Fun in the Snow", ":snowman:"),
+    Prompt("It's Cold Outside", ":cold_face:")
+  ],
+  4: [
+    Prompt("Comfort food", ":shallow_pan_of_food"),
+    Prompt("Late Night Supper", ":fries:"),
+    Prompt("Cooking Time", ":mate:")
+  ],
+  5: [
+    Prompt("A Warm Meal", ":ramen: :fondue:"),
+    Prompt("My Favourite Food", ":rice_ball: :smiling_face_with_3_hearts:"),
+  ],
+  6: [
+    Prompt("Chocolate!", ":chocolate_bar:"),
+    Prompt("Love is in the air", ":revolving_hearts:"),
+  ],
+  8: [
+    Prompt("In My Future", ":fries: :clown:"),
+    Prompt("Looking Ahead", ":telescope:"),
+  ],
+  9: [
+    Prompt("A Day In Teyvat", ":evergreen_tree: :cloud:"),
+    Prompt("A character from a different franchise but they’re in genshin", ":elf: :man_mage:"),
+  ],
+  10: [
+    Prompt("The Grind", ":muscle:"),
+    Prompt("Exercise", ":woman_running:"),
+    Prompt("My Hopes", ":metal: :moneybag:")
+  ],
+  11: [
+    Prompt("The End", ":gloves:"),
+    Prompt("A Job Well Done", ":partying_face:"),
+    Prompt("Good Job", ":thumbsup:")
+  ],
+}
+
+""" SEM 1 Prompts
 WEEKLYPROMPT_DICT_WEEK_TO_PROMPT = {
   3: [
     Prompt("Welcome Back", ":wave:"),
@@ -245,6 +291,7 @@ WEEKLYPROMPT_DICT_WEEK_TO_PROMPT = {
     Prompt("Trick or Treat!", ":jack_o_lantern: :candy:")
   ],
 }
+"""
 
 PAYLOAD_PARAM_MESSAGE_TO_SUBMITTED_ARTWORK = "message_artwork"
 PAYLOAD_PARAM_MESSAGE_TO_APPROVE_ARTWORK = "message_approve_artwork"

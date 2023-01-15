@@ -193,6 +193,8 @@ class Player():
       else self[GSHEET_COLUMN_BIRTHDAY].strftime('%Y-%m-%d')
     return output_df_row
 
+
+
   """
   Utils
   """

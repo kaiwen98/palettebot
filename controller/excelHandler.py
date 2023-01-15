@@ -318,18 +318,21 @@ def correct_df_header(df, name_dict = qn_to_colnames):
         df = df.rename(columns=name_dict)
     return df
 
+def get_spreadsheet(docid):
+    scope = ['https://spreadsheets.google.com/feeds']
+    credentials = ServiceAccountCredentials.from_json_keyfile_name(PATH_TO_CREDENTIALS, scope)
+    client = gspread.authorize(credentials)
+    spreadsheet = client.open_by_key(docid)
+    return spreadsheet
 """
 Get a Dataframe of all spreadsheets in the worksheet, concatanated one against the next.
 """
 def get_sheet_df_from_drive(docid, name_dict = qn_to_colnames, column_names = None):
-    scope = ['https://spreadsheets.google.com/feeds']
-    credentials = ServiceAccountCredentials.from_json_keyfile_name(PATH_TO_CREDENTIALS, scope)
-    df_list = []
-    client = gspread.authorize(credentials)
-    spreadsheet = client.open_by_key(docid)
+    spreadsheet = get_spreadsheet(docid)
     missing_column_names = None
     output_df = None
     worksheets = spreadsheet.worksheets()
+    df_list = []
 
     # Combine all sheets to one single dataframe.
     for id, worksheet in enumerate(worksheets, start = 1):
@@ -349,14 +352,15 @@ def get_sheet_df_from_drive(docid, name_dict = qn_to_colnames, column_names = No
         # Set column to first row, which is the header row in gsheet
         df_worksheet.columns = df_worksheet.iloc[0]
         # Remove the header row since it is not data.
-        df_worksheet = df_worksheet.iloc[1:,:]
+        df_worksheet: pd.DataFrame = df_worksheet.iloc[1:,:]
         df_worksheet = correct_df_header(df_worksheet, name_dict)
-
-
+        df_worksheet["worksheetId"] = id-1
+        df_worksheet.insert(1, "playerLocalId", list(range(2, len(worksheet_values)+1)), True)
 
         df_list.append(df_worksheet) 
 
     output_df = pd.concat(df_list)
+    print(output_df)
 
     # It is assumed that all worksheets have the same columns.
     # If excel sheet is missing the columns, create new column will null values.

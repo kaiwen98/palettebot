@@ -3,6 +3,7 @@ from discord.utils import get
 from controller.excelHandler import (
   get_fuzzily_discord_handle,
   get_player_from_gsheets,
+  get_spreadsheet,
   transform_df_birthday_column, 
   update_columns_to_gsheets
 )
@@ -66,6 +67,31 @@ class DiscordBot(metaclass=Singleton):
     self.update_delay = 60
     self.players_df = None
 
+  def setSpreadsheet(self, ss):
+    self.spreadsheet = ss
+
+  def updateSinglePlayer(self, player: Player):
+    output_row = player.export_to_df_row()
+    print(output_row)
+    worksheet = self.spreadsheet.get_worksheet(int(player.attributes["worksheetId"]))
+    row_index = int(player.attributes["playerLocalId"])
+    cell_cols = worksheet.range("A1:R1")
+    cell_cols_map = {
+      k: v
+      for k, v in enumerate(cell_cols)
+    }
+    cell_list = worksheet.range(f"A{row_index}:R{row_index}")
+    
+    print("DIAGNOSING CELL VALUE")
+    for i, cell in enumerate(cell_list):
+      print(cell_cols_map[i])
+      print(output_row[cell_cols_map[i].value])
+      cell.value = output_row[cell_cols_map[i].value] 
+
+    worksheet.update_cells(
+      cell_list
+    )
+
   """
   Runs the bot.
   """
@@ -116,6 +142,10 @@ class DiscordBot(metaclass=Singleton):
   """
   async def initialize_players_from_master_tracker(self, isFirstCalled=True):
     print("[INFO] Extracting from google sheet...")
+    # Set spreadsheet
+    self.setSpreadsheet(get_spreadsheet(os.getenv(DOCID_MASTER_TRACKER)))
+
+    # Set DF
     df = get_player_from_gsheets()
 
     # Populate the unidentified discord members into the last worksheet.
@@ -167,8 +197,10 @@ class DiscordBot(metaclass=Singleton):
       if key in self.players.keys() and isFirstCalled:
         print("DUPLICATE KEY ERROR ", key, index)
         continue
-
+      print(row, index)
       self.players[key] = Player(row, index)
+      # while True:
+        # pass
     print("[INFO] End intialising players")
 
   def get_appended_unrecorded_members(self, df):
@@ -267,6 +299,8 @@ class DiscordBot(metaclass=Singleton):
       #print("[INFO] No change in player df. Skipping update.")
       return
 
+    DiscordBot()
+
     update_columns_to_gsheets(
       input_df=self.players_df,
       doc_id=os.getenv(DOCID_MASTER_TRACKER),
@@ -342,5 +376,5 @@ class DiscordBot(metaclass=Singleton):
     return get_fuzzily_discord_handle(discord_name, df, get_uid)
 
   def get_player_by_id(self, id):
-    filtered_players = {k: v for k, v in self.players.items() if v.attributes(GSHEET_COLUMN_DISCORD_ID) == id}
+    filtered_players = {k: v for k, v in self.players.items() if v.attributes[GSHEET_COLUMN_DISCORD_ID] == id}
     return list(filtered_players.items())[0][1]

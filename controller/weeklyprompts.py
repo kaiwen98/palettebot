@@ -25,6 +25,7 @@ from utils.constants import (
   DELAY, 
   DIR_OUTPUT,
   DISCORD_GUILD,
+  ENV,
   GSHEET_COLUMN_DISCORD,
   GSHEET_COLUMN_NAME,
   GSHEET_WEEKLYPROMPT_COLUMN_APPROVED,
@@ -75,26 +76,26 @@ async def task():
       if not get_config_param(GLOBAL_WEEKLYPROMPT_ISON):
         continue
 
-    # await DiscordBot().sync_db()
     # do something
 
-    # try:
-
-    if is_done_this_week(hour=0, reset=False):
-      continue
+    try:
+      if is_done_this_week(hour=0, reset=False):
+        continue
     
-    print("hi")
-    # await get_scores(is_routine=True)
-    # except Exception as e:
-    #     await channel.send(
-    #         "```Error occured! Contact the administrator. Message: %s```" % (str(e))
-    #     )
+      await DiscordBot().sync_db()
+      print("hi")
+      await get_scores(is_routine=True)
+    except Exception as e:
+        await DiscordBot().get_channel(None, os.getenv(WEEKLYPROMPTS_REPORT_CHANNEL)).send(
+            "```Error occured! Contact the administrator. Message: %s```" % (str(e))
+        )
     
 
 async def get_scores(is_routine=False):
   # Pull changes from Gsheets
   #DiscordBot().set_up_after_run()
   # Ensures that the score report is only posted once a day, or when the bot restarts.
+
 
   guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
   #print("report getscores", os.getenv(WEEKLYPROMPTS_REPORT_CHANNEL))
@@ -418,7 +419,7 @@ async def on_raw_reaction_add(payload):
 
   player_id = message_artwork.author.id
 
-  if player_id == approver.id:
+  if player_id == approver.id and os.getenv(ENV) != 'local':
     return await DiscordBot().get_channel(guild, os.getenv(WEEKLYPROMPTS_APPROVE_CHANNEL)).send(
       "Not authorised to approve! Don't congratulate yourself."
     )
@@ -464,6 +465,8 @@ async def on_raw_reaction_add(payload):
     # Remove id from queue
   DiscordBot().approve_queue[ART_FIGHT_MODE_WEEKLY_PROMPTS].pop(str(message_approve_artwork_id))
 
-  
-  await DiscordBot().update_players_to_db()
+  # await DiscordBot().update_players_to_db()
+
+  # Instead of updating the entire DB, just update the row corresponding to the player.
+  DiscordBot().updateSinglePlayer(player)
 
