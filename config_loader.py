@@ -23,6 +23,19 @@ GLOBAL_WEEKLYPROMPT_ISON = "GLOBAL_WEEKLYPROMPT_ISON"
 global_config_params = {
   "GLOBAL_DATE": None,
   "GLOBAL_WEEK": None,
+  "GLOBAL_PERIOD": None,
+  "GLOBAL_DATETIME": None,
+  "GLOBAL_DELAY": None,
+  "GLOBAL_WEEKLYPROMPT_ISON": True,
+  ART_FIGHT_STATE : ART_FIGHT_MODE_NOTHING 
+}
+
+def reset_config():
+  global global_config_params
+  global_config_params = {
+  "GLOBAL_DATE": None,
+  "GLOBAL_WEEK": None,
+  "GLOBAL_PERIOD": None,
   "GLOBAL_DATETIME": None,
   "GLOBAL_DELAY": None,
   "GLOBAL_WEEKLYPROMPT_ISON": True,
@@ -45,8 +58,9 @@ def get_recorded_date():
   global global_config_params
   return global_config_params["GLOBAL_DATE"]
 
-def set_recorded_week(week):
+def set_recorded_week(period_name, week):
   global global_config_params
+  global_config_params["GLOBAL_PERIOD"] = period_name
   global_config_params["GLOBAL_WEEK"] = week
 
 def get_recorded_week():
@@ -72,9 +86,11 @@ def set_delay(delay):
 
 
 def load_config(env):
-  print("Loading config")
+  print("[LOG] Loading config")
   dotenv_path = os.path.join(os.path.dirname(__file__), f".env.{env}")
   load_dotenv(dotenv_path)
+  # import json
+  # print(json.dumps(dict(os.environ)))
   set_key(dotenv_path, "ENV", env)
   is_production_env = os.getenv("ENV") == 'production'
 
@@ -89,8 +105,6 @@ def load_config(env):
   set_key(dotenv_path, ART_FIGHT_STATE, str(art_fight_state))
   set_config_param(ART_FIGHT_STATE, art_fight_state)
   # print(os.environ)
-
-  DiscordBot()
 
 def load_env_by_command_line_args():
   # Remove 1st argument from the

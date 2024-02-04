@@ -39,15 +39,3 @@ def register_events():
     await ctx.send(json.dumps(player.weeklyprompts_week_to_num_submitted_artworks))
     await DiscordBot().update_players_to_db()
     #await weekp.get_scores(True)
-
-  @bot.command(
-      name="weekp_toggle",
-      help="Toggle weekly prompts activation"
-  )
-
-  async def toggle(ctx):
-    print("called")
-    value = get_config_param(GLOBAL_WEEKLYPROMPT_ISON)
-    set_config_param(GLOBAL_WEEKLYPROMPT_ISON, not value)
-    report_state = "ON" if not value else "OFF"
-    return await ctx.send(f"Toggle to {report_state}!")

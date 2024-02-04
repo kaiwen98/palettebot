@@ -1,6 +1,7 @@
 import os
 from controller.excelHandler import set_up_gsheets
 from controller.gdrive_uploader import set_up_gdrive
+from models.ConfigurationSheet import ConfigurationSheet
 from models.DiscordBot import DiscordBot
 
 from events.commons import register_events as register_events_commons
@@ -20,12 +21,19 @@ if __name__ == "__main__":
   load_env_by_command_line_args()
   set_up_gdrive()
   set_up_gsheets()
+  DiscordBot().setup()
+  ConfigurationSheet().setup()
+
+  ConfigurationSheet().get_spreadsheet()
+  ConfigurationSheet().process_cmds()
+  ConfigurationSheet().process_telemetry()
+
   register_events_commons()
   #register_events_member()
-  register_events_birthday()
-  register_events_inktober()
+  # register_events_birthday()
+  # register_events_inktober()
   register_events_messages()
-  register_events_waifuwars()
+  # register_events_waifuwars()
   register_events_weeklyprompts()
 
   DiscordBot().run()

@@ -324,6 +324,9 @@ def get_spreadsheet(docid):
     client = gspread.authorize(credentials)
     spreadsheet = client.open_by_key(docid)
     return spreadsheet
+
+
+
 """
 Get a Dataframe of all spreadsheets in the worksheet, concatanated one against the next.
 """

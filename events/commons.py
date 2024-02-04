@@ -2,6 +2,7 @@
 Consolidates all commands that is related to the birthdayTracker.
 """
 import controller
+from models.ConfigurationSheet import ConfigurationSheet
 from models.DiscordBot import DiscordBot
 from controller import inktober as ink
 from controller import waifuwars as waf
@@ -57,7 +58,7 @@ def register_events():
 	bot = DiscordBot().bot
 	@bot.event
 	async def on_ready():
-		print(os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL))
+		# print(os.getenv(WEEKLYPROMPTS_RECEIVE_CHANNEL))
 		links = await DiscordBot().get_guild().invites()
 		f_links = list(filter(lambda link: link.code in ['WbGacQnYUp'], links))
 		#print(f_links[0].uses)
@@ -79,15 +80,11 @@ def register_events():
 			
 		print(f'{bot.user} has connected to Discord!')
 
-
-
-		print(links)
-
-		if get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
+		if os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
 			bot.loop.create_task(ink.task())
-		elif get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_WAIFUWARS:
+		elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WAIFUWARS:
 			bot.loop.create_task(waf.task())
-		elif get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS:
+		elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS:
 			bot.loop.create_task(weekp.task())
 		
 		# This periodic task is pretty wasteful.
@@ -160,62 +157,5 @@ def register_events():
 			await ctx.send(
 				"```Error occured! Contact the administrator. Message: %s```" % (str(e))
 			)
-
-	@bot.command(
-		name='ex2022_kick_participants', 
-		help='Kick all participants with the role: Extravaganza 2022 Participant'
-	)
-	async def ex2020_kick_participants(ctx):
-		guild = DiscordBot().get_guild(os.getenv(DISCORD_GUILD))
-		for member in guild.members:
-			if ( 
-				len(list(filter(lambda role: role.name == EXTRAVAGANZA_ROLE, member.roles))) > 0 \
-				and len(list(filter(lambda role: role.name == 'Member', member.roles))) == 0
-			):
-				print("kick: ", member.name)
-				await guild.kick(member, reason = "Thank you for joining our NUSCAS Palette Discord! Hope it has been fun for you :)") 
-
-	@bot.command(
-		name='ex2022_set_new_invite', 
-		help='Set a new invite link. If no link is provided, a new one is generated.'
-	)
-	async def ex2020_set_new_invite(ctx, updated_invite = None):
-		guild = DiscordBot().get_guild(GUILD)
-		link = None
-		invites = await guild.invites()
-
-		if updated_invite is None:
-			channel = DiscordBot().get_channel(guild, "general")
-			link = channel.create_invite()
-			link = link.code
-
-		else:
-			for i in invites:
-				if i.code == updated_invite:
-					link = i.code
-					break
-
-			if link is not None:
-				await ctx.send(
-					"```Your updated invite link is https://discord.gg/%s```" % (link)
-				)
-
-				if DiscordBot().extravaganza_invite_link is not None:
-
-					tmp = DiscordBot().find_invite_by_code(invites, DiscordBot().extravaganza_invite_link)
-					if tmp is not None:
-						await tmp.delete()
-
-					DiscordBot().extravaganza_invite_link = link
-					print(DiscordBot().extravaganza_invite_link, " is created")
-
-			else:
-				await ctx.send(
-					"```We cannot find the link. It is invalid.```"
-				)    
-
-			DiscordBot().invite_links[guild.id] = await guild.invites()
-
-
 
 

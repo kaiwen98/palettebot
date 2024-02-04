@@ -124,8 +124,9 @@ async def get_photos(input_channel_name, palette_particulars, dd_begin, mm_begin
   channel = DiscordBot().get_channel(guild, input_channel_name)
   artist_name_to_num_artworks = {}
 
-  from_date = datetime(year, mm_begin, dd_begin, 0, 0, 0) - (timedelta(hours = 8) if os.getenv(ENV) == "production" else timedelta(hours = 0))
-  to_date = datetime(year, mm_end, dd_end, 0, 0, 0) - (timedelta(hours = 8) if os.getenv(ENV) == "production" else timedelta(hours = 0))
+  time_offset = os.getenv("TIME_OFFSET_H")
+  from_date = datetime(year, mm_begin, dd_begin, 0, 0, 0) - (timedelta(hours = time_offset))
+  to_date = datetime(year, mm_end, dd_end, 0, 0, 0) - (timedelta(hours = time_offset))
 
   if channel is None: 
     await ctx.send(

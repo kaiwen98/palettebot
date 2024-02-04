@@ -85,6 +85,11 @@ class Player():
       week
     )
 
+  def reset_weeklyprompt_scores(self):
+    self.weeklyprompts_week_to_num_submitted_artworks = {
+      i: 0 for i in range(1, NUM_WEEKS + 1, 1)
+    }
+
   def get_weeklyprompt_scores_to_encoding(self):
     return ';'.join(
       map(
@@ -202,4 +207,8 @@ class Player():
   def set_map_by_encoding(self, map, encoding, index):
     #print(encoding)
     #print(index)
-    map[index] = int(encoding.split(";")[index-1])
+    try:
+      map[index] = int(encoding.split(";")[index-1])
+    except:
+      map[index] = 0
+    

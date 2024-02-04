@@ -50,7 +50,8 @@ from utils.constants import (
 Class to manage discord bot utilities and functions.
 """
 class DiscordBot(metaclass=Singleton):
-  def __init__(self):
+  def setup(self, *args, **kw):
+    print("[LOG] Called DiscordBot init")
     intents = discord.Intents.default()
     intents.members = True
     intents.messages = True
@@ -168,6 +169,11 @@ class DiscordBot(metaclass=Singleton):
     print(self.approve_queue)
 
     print("[INFO] Done Initialising players!")
+    
+    """
+    Update changes to the excel sheet.
+    """
+    await DiscordBot().update_players_to_db()
       #print(self.approve_queue)
 
   async def update_new_players(self):
@@ -197,12 +203,13 @@ class DiscordBot(metaclass=Singleton):
       if key in self.players.keys() and isFirstCalled:
         print("DUPLICATE KEY ERROR ", key, index)
         continue
-      print(row, index)
+      # print(row, index)
       self.players[key] = Player(row, index)
       # while True:
         # pass
     print("[INFO] End intialising players")
 
+  # 
   def get_appended_unrecorded_members(self, df):
     self.df_discord_members = pd.DataFrame({
       "Discord": [i.name + "#" + str(i.discriminator) for i in self.guild.members],
@@ -222,7 +229,7 @@ class DiscordBot(metaclass=Singleton):
     # Find set of members who are not recorded in the form.
     set_of_unrecorded_members_discord_ids = set(list_of_discord_members_discord_ids) \
       - set(list_of_recorded_members_discord_ids)
-
+    
     # Generates a dataframe of unrecorded members to the member list.
     print("[INFO] Generating unrecorded dataframe...")
     
@@ -268,7 +275,8 @@ class DiscordBot(metaclass=Singleton):
     # Replaces all players with null discord ids with uuid so that the dataframe can be retained.
     df_output[GSHEET_COLUMN_DISCORD_ID] = df_output[GSHEET_COLUMN_DISCORD_ID].apply(lambda x: x if x != '' else str(uuid.uuid1()))
 
-    #print(df_output)
+    # print(df_output)
+
     return df_output
 
 
@@ -299,8 +307,7 @@ class DiscordBot(metaclass=Singleton):
       #print("[INFO] No change in player df. Skipping update.")
       return
 
-    DiscordBot()
-
+    # DiscordBot()
     update_columns_to_gsheets(
       input_df=self.players_df,
       doc_id=os.getenv(DOCID_MASTER_TRACKER),

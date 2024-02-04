@@ -18,7 +18,6 @@ import os
 import pandas as pd
 from config_loader import (
     GLOBAL_WEEKLYPROMPT_ISON, 
-    get_config_param, 
 )
 from utils.constants import ART_FIGHT_MODE_INKTOBER, ART_FIGHT_MODE_WAIFUWARS, ART_FIGHT_MODE_WEEKLY_PROMPTS, ART_FIGHT_STATE
 
@@ -28,11 +27,11 @@ def register_events():
     @bot.event
     async def on_message(message):
         async with AsyncManager().lock:
-            if get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
+            if os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
                 await ink.on_message(message, DiscordBot().approve_queue)
-            elif get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_WAIFUWARS:
+            elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WAIFUWARS:
                 await waf.on_message_waifuwars(message, DiscordBot().approve_queue)
-            elif get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS and get_config_param(GLOBAL_WEEKLYPROMPT_ISON):
+            elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS:
                 await weekp.on_message(message)
             elif message.channel.name == "bot-spam":
                 await bot.process_commands(message)
@@ -40,25 +39,25 @@ def register_events():
     @bot.event
     async def on_message_edit(message_before, message_after):
         async with AsyncManager().lock:
-            if get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
+            if os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
                 await ink.on_message(message_after, DiscordBot().approve_queue)
-            elif get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_WAIFUWARS:
+            elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WAIFUWARS:
                 await waf.on_message_waifuwars(message_after, DiscordBot().approve_queue)
-            elif get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS and get_config_param(GLOBAL_WEEKLYPROMPT_ISON):
+            elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS:
                 await weekp.on_message(message_after)
-            elif message.channel.name == "bot-spam":
+            elif message_before.channel.name == "bot-spam":
                 await bot.process_commands(message_after)
 
     @bot.event
     async def on_raw_reaction_add(payload):
         async with AsyncManager().lock:
             print("pepe")
-            print(get_config_param(GLOBAL_WEEKLYPROMPT_ISON))
+            print(os.getenv(GLOBAL_WEEKLYPROMPT_ISON))
             print(os.getenv(ART_FIGHT_STATE))
-            if get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
+            if os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_INKTOBER:
                 await ink.on_raw_reaction_add(payload, DiscordBot().approve_queue)
-            elif get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS and get_config_param(GLOBAL_WEEKLYPROMPT_ISON):
+            elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WEEKLY_PROMPTS:
                 await weekp.on_raw_reaction_add(payload)
-            elif get_config_param(ART_FIGHT_STATE) == ART_FIGHT_MODE_WAIFUWARS:
+            elif os.getenv(ART_FIGHT_STATE) == ART_FIGHT_MODE_WAIFUWARS:
                 await waf.on_raw_reaction_add(payload, DiscordBot().approve_queue)
 

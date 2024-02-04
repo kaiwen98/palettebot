@@ -2,7 +2,7 @@ env
 **/.env.*
 env1
 **/__pycache__
+!.env.production
+**/*.json
 settings.yaml
-client_secret_*.json
-credentials.json
-credentials_excel.json
+cred

@@ -8,10 +8,25 @@ from utils.constants import (
   DISCORD_GUILD, 
   DISCORD_MESSAGES_LIMIT,
   ENV,
+  NUS_CALENDAR_PERIOD_TYP_BLOCKED,
+  NUS_CALENDAR_PERIOD_TYP_LIST,
+  NUS_CALENDAR_PERIOD_TYP_SEM1A,
+  NUS_CALENDAR_PERIOD_TYP_SEM1B,
+  NUS_CALENDAR_PERIOD_TYP_SEM1R,
+  NUS_CALENDAR_PERIOD_TYP_SEM1VA,
+  NUS_CALENDAR_PERIOD_TYP_SEM1VB,
+  NUS_CALENDAR_PERIOD_TYP_SEM2A,
+  NUS_CALENDAR_PERIOD_TYP_SEM2B,
+  NUS_CALENDAR_PERIOD_TYP_SEM2R,
+  NUS_CALENDAR_PERIOD_TYP_SEM2V,
   WEEKLYTOBER_WEEKS_TO_IGNORE
 )
 
 import re
+
+def convert_file_to_spoiler_file(file):
+  file.filename = f"SPOILER_{file.filename}"
+  return file
 
 
 def get_file_path(*path):
@@ -41,15 +56,53 @@ def get_timestamp_from_curr_datetime():
   output = datetime.now().strftime("%m%d%Y_%H%M%S")
   return output.strip()
 
+
+# https://nus.edu.sg/registrar/docs/info/calendar/ay2022-2023.pdf
 def get_week_from_datetime(input_datetime):
-  sem1_week_offset = datetime(datetime.today().year, 8, 9)
-  sem2_week_offset = datetime(datetime.today().year, 1, 9)
-  return input_datetime.isocalendar()[1] + 1 - \
-    (
-      sem1_week_offset.isocalendar()[1] \
-      if input_datetime > sem1_week_offset \
-      else sem2_week_offset.isocalendar()[1]
-    )
+  from models.ConfigurationSheet import ConfigurationSheet
+  calendar_period_matrix = ConfigurationSheet().semester_period
+
+  num_periods = len(calendar_period_matrix)
+
+  for i in range(num_periods):
+    curr_week = input_datetime.isocalendar()[1]
+    period_name = calendar_period_matrix[i][0]
+    period_start = calendar_period_matrix[i][1][0]
+    period_end = calendar_period_matrix[i][1][1]
+    week_start = datetime(datetime.today().year, period_start[0], period_start[1])\
+    .isocalendar()[1]
+    week_end = datetime(datetime.today().year, period_end[0], period_end[1])\
+    .isocalendar()[1]
+   
+    if (curr_week >= week_start) and (curr_week <= week_end):
+      loc_week_no = curr_week - week_start + 1
+      period_b_to_a_offset = {
+         NUS_CALENDAR_PERIOD_TYP_SEM1B: NUS_CALENDAR_PERIOD_TYP_LIST.index(NUS_CALENDAR_PERIOD_TYP_SEM1A),
+         NUS_CALENDAR_PERIOD_TYP_SEM1VB: NUS_CALENDAR_PERIOD_TYP_LIST.index(NUS_CALENDAR_PERIOD_TYP_SEM1VA),
+         NUS_CALENDAR_PERIOD_TYP_SEM2B: NUS_CALENDAR_PERIOD_TYP_LIST.index(NUS_CALENDAR_PERIOD_TYP_SEM2A)
+      }
+      if period_name in period_b_to_a_offset.keys():
+        loc_week_no = curr_week - week_start + 1
+        period_start = calendar_period_matrix[
+            period_b_to_a_offset[period_name]
+          ][1][0]
+        
+        period_end = calendar_period_matrix[
+            period_b_to_a_offset[period_name]
+          ][1][1]
+        
+        week_start = datetime(datetime.today().year, period_start[0], period_start[1])\
+          .isocalendar()[1]
+        week_end = datetime(datetime.today().year, period_end[0], period_end[1])\
+          .isocalendar()[1]
+        offset = abs(week_end - week_start)
+        loc_week_no += offset
+      return period_name, loc_week_no
+    
+    else:
+      continue
+  # If out of range, assume user blocked it
+  return NUS_CALENDAR_PERIOD_TYP_BLOCKED, -1
 
 def get_today_date():
   return get_today_datetime().date()
@@ -57,30 +110,36 @@ def get_today_date():
 def get_today_datetime():
   # Gets date with time zone accounted for/=
   # SGT = UTC + 8hrs
+  if (os.getenv("TIME_OFFSET_H") is None):
+    return datetime.now()
+  time_offset = int(os.getenv("TIME_OFFSET_H"))
   output_datetime = datetime.now() + (
     timedelta(
-      hours = 8 if os.getenv(ENV) != 'local' else 0
+      hours = time_offset
     )   
   )
   return output_datetime
 
 def get_today_week():
   # Get week of the semester without factoring recess week
-  actual_week = get_week_from_datetime(get_today_datetime())
-  output_week = -1
-  RECESS_WEEK = 7
+  return get_week_from_datetime(get_today_datetime())
+  # output_week = -1
+  # RECESS_WEEK = 7
   
-  if output_week in WEEKLYTOBER_WEEKS_TO_IGNORE:
-    output_week = -1
+  # if output_week in WEEKLYTOBER_WEEKS_TO_IGNORE:
+  #   output_week = -1
 
-  else:
-    # By right, this is recess week. We need to factor that in.
-    if actual_week > RECESS_WEEK:
-      output_week = actual_week - 1
-    elif actual_week < RECESS_WEEK: 
-      output_week = actual_week
+  # else:
+  #   # By right, this is recess week. We need to factor that in.
+  #   if actual_week > RECESS_WEEK:
+  #     output_week = actual_week - 1
+  #   elif actual_week < RECESS_WEEK: 
+  #     output_week = actual_week
 
-  return output_week
+  # return output_week
+
+def get_today_week_from_env():
+  return int(os.getenv("CURR_WEEK"))
 
 def get_num_days_away(member_date):
   dummy_member_date = datetime(
@@ -150,11 +209,11 @@ def get_processed_input_message(input):
   # Convert all to lowercase to avoid type sensitivity
   input = input.lower().strip()
   # Regex pattern to validate submission text
-  input_validation_pattern = r'^week:\s*[\d]+\s*(\r\n|\n|\n\n)prompt:\s*[\d(\s|,)*]+$'
+  input_validation_pattern = r'^week:\s*[\d]+\s*(\r\n|\n|\n\n)prompt:\s*[\d(\s|,)*]+'
 
   if not re.match(input_validation_pattern, input):
     print("Error parsing. Please follow format.")
-    raise Exception("Error parsing. Please follow the designated formate carefully.")
+    raise Exception("Error parsing. Please follow the designated format carefully.")
 
   # Process text to produce dict of tokens
   tokens = list(map(

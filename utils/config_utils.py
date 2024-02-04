@@ -35,9 +35,10 @@ def is_done_this_week(hour=None, reset=None):
 
   print(get_recorded_week())
   print(hour)
+  period, week = get_week_from_datetime(get_today_datetime())
 
   if get_recorded_week() == None:
-    set_recorded_week(get_week_from_datetime(get_today_datetime()))
+    set_recorded_week(period, week)
     if reset != None:
       return reset
 
@@ -45,7 +46,7 @@ def is_done_this_week(hour=None, reset=None):
     # This week
     (
       get_recorded_week() \
-      != get_week_from_datetime(get_today_datetime())
+      != week
     ) 
     # At this hour
     and (
@@ -53,12 +54,11 @@ def is_done_this_week(hour=None, reset=None):
       or get_today_datetime().hour == int(hour)
     ) 
   ):
-    set_recorded_week(get_week_from_datetime(get_today_datetime()))
+    set_recorded_week(period, week)
     return False
 
   print(
-    "Week: ", 
-    get_week_from_datetime(get_today_datetime())
+    f"Week: {week} - {period}", 
   )
 
   print(

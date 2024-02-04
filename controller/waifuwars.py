@@ -32,7 +32,9 @@ from controller.commons import get_list_of_artists
 from controller.inktober import DICT_DAY_TO_PROMPT
 from utils.constants import (
 	APPROVE_SIGN,
-	DELAY,
+	ART_FIGHT_MODE_INKTOBER,
+	ART_FIGHT_STATE,
+	POLL_TIME_S,
 	DIR_OUTPUT, 
 	DISCORD_CHANNEL_ART_GALLERY,
 	DISCORD_CHANNEL_WAIFU_WARS,
@@ -92,7 +94,11 @@ async def task():
 		DiscordBot().get_channel(None, os.getenv(WAIFUWARS_REPORT_CHANNEL))
 		while True:
 			# do something
-			counter = int(os.getenv(DELAY))
+
+			if os.getenv(ART_FIGHT_STATE) != ART_FIGHT_MODE_WAIFUWARS:
+				print("[LOG] Inktober disabled!")
+				continue
+			counter = int(os.getenv(POLL_TIME_S))
 			# try:
 			await get_scores()
 			# except Exception as e:

@@ -38,7 +38,7 @@ from utils.config_utils import is_done_this_day
 from utils.constants import (
   BIRTHDAY_REPORT_CHANNEL,
   DEFAULT_COLUMN_DATA,
-  DELAY,
+  POLL_TIME_S,
   DIR_OUTPUT, 
   DISCORD_CHANNEL_ART_GALLERY,
   DISCORD_GUILD, 
@@ -77,7 +77,7 @@ async def task():
 
   print("[BDAY] Starting Birthday Applet...")
   while True:
-    await asyncio.sleep(int(os.getenv(DELAY)) + 10)
+    await asyncio.sleep(int(os.getenv(POLL_TIME_S)) + 10)
 
     if is_done_this_day(reset=False): 
       continue

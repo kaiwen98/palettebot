@@ -4,6 +4,7 @@ from config_loader import (
   get_recorded_date, 
   set_recorded_date
 )
+from models.ConfigurationSheet import ConfigurationSheet
 from models.DiscordBot import DiscordBot, Player
 import discord
 import pandas as pd
@@ -16,7 +17,9 @@ from controller.excelHandler import (
 )
 from utils.constants import (
   APPROVE_SIGN,
-  DELAY, 
+  ART_FIGHT_MODE_INKTOBER,
+  ART_FIGHT_STATE,
+  POLL_TIME_S, 
   DIR_OUTPUT,
   DISCORD_GUILD,
   GSHEET_COLUMN_DISCORD,
@@ -86,13 +89,17 @@ async def task():
   while True:
     # do something
 
+    if os.getenv(ART_FIGHT_STATE) != ART_FIGHT_MODE_INKTOBER:
+        print("[LOG] Inktober disabled!")
+        continue
+
     # try:
     await get_scores()
     # except Exception as e:
     #     await channel.send(
     #         "```Error occured! Contact the administrator. Message: %s```" % (str(e))
     #     )
-    delay: int = int(os.getenv(DELAY))
+    delay: int = int(os.getenv(POLL_TIME_S))
     await asyncio.sleep(delay)
 
 async def get_scores(command = False):
@@ -271,8 +278,14 @@ async def on_raw_reaction_add(payload, approve_queue):
   if message_approve_artwork.id not in [i["message_approve_artwork"].id for i in approve_queue]:
     return
 
+  if (os.getenv("APPROVER_ROLES") is None):
+    ConfigurationSheet().set_err_msg("Invalid APPROVER ROLES!")
+    return 
+  
+  list_of_approver_roles = os.getenv("APPROVER_ROLES").split(';')
+
   # Ensure approver is of correct access rights
-  if len(list(filter(lambda role: role.name in ["Senpai"], user.roles))) == 0:
+  if len(list(filter(lambda role: role.name in list_of_approver_roles, user.roles))) == 0:
     return 
 
   # If not on approve channel
@@ -284,7 +297,6 @@ async def on_raw_reaction_add(payload, approve_queue):
   day = approve_request_to_service["day"]
   message_artwork = approve_request_to_service["message_artwork"]
   message_approval_status = approve_request_to_service["message_approval_status"]
-
 
   approve_queue.remove(approve_request_to_service)
 
