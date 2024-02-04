@@ -2,7 +2,7 @@ env
 **/.env.*
 env1
 **/__pycache__
-!.env.production
+.env.production
 **/*.json
 settings.yaml
 cred
